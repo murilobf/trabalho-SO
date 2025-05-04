@@ -2,33 +2,47 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 using namespace std;
+//Classe que armazena os dados das threads de um processo
+class Thread{
+    int tid;
+    double tempoCpu;
+};
+
 //Classe que armazena os dados de um processo
 class Processo{
     public:
     //Dados identificadores do processo (id, nome, usuário)
     int pid;
     string nome;
+    
+
+    //Dados relativos ao requisito 1 do trabalho (threads, usuario)
     string usuario;
 
-    //Dados relativos a memoria do processo
+    //Dados relativos ao requisito 2 do trabalho (memória)
     int memAlocada;
     int qtdePaginasTotal;
     int qtdePaginasCodigo;
     int qtdePaginasHeap;
     int qtdePaginasStack;
-
-    //Dados relativos 
 };
 
 //Classe que armazena os dados do sistema
 class Sistema{
 
+    //Dados do processador
+
+    //Dados da memória
     int memTotal;
     int memLivre;
     int memFisica;
     int memVirtual;
+
+    //Vetor que guarda todos os processos do sistema
+    vector<Processo> processos;
 };
 
 /*PARTE DO MURILO:
