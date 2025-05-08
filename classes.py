@@ -3,14 +3,14 @@ class Processo:
     
     #Função inicializadora do processo
     def __init__(self,
-                 pid: int,
-                 nome: str,
-                 usuario: str,
-                 mem_alocada: int,
-                 qtde_paginas_total: int,
-                 qtde_paginas_codigo: int,
-                 qtde_paginas_heap: int,
-                 qtde_paginas_stack: int):
+        pid: int,
+        nome: str,
+        usuario: str,
+        mem_alocada: int,
+        qtde_paginas_total: int,
+        qtde_paginas_codigo: int,
+        qtde_paginas_heap: int,
+        qtde_paginas_stack: int):
         
         #Dados identificadores do processo (id, nome, usuário)
         self.pid = pid
