@@ -1,16 +1,18 @@
+class Sistema:
+    def __init__(self, memTotal, memLivre, memFisica, memVirtual, processos):
+        #Dados de memória
+        self.memTotal = memTotal
+        self.memLivre = memLivre
+        self.memFisica = memFisica
+        self.memVirtual = memVirtual
+        #Vetor que guarda todos os processos atualmente no sistema
+        self.processos = processos
+
 #Classe que armaeznea os dados de um processo
 class Processo:
     
     #Função inicializadora do processo
-    def __init__(self,
-        pid: int,
-        nome: str,
-        usuario: str,
-        mem_alocada: int,
-        qtde_paginas_total: int,
-        qtde_paginas_codigo: int,
-        qtde_paginas_heap: int,
-        qtde_paginas_stack: int):
+    def __init__(self,pid: int,nome: str,usuario: str,mem_alocada: int,qtde_paginas_total: int,qtde_paginas_codigo: int,qtde_paginas_heap: int,qtde_paginas_stack: int):
         
         #Dados identificadores do processo (id, nome, usuário)
         self.pid = pid
@@ -23,15 +25,30 @@ class Processo:
         self.qtde_paginas_heap = qtde_paginas_heap
         self.qtde_paginas_stack = qtde_paginas_stack
 
-class Sistema:
-    def __init__(memTotal, memLivre, memFisica, memVirtual, processos):
-        #Dados de memória
-        self.memTotal = memTotal
-        self.memLivre = memLivre
-        self.memFisica = memFisica
-        self.memVirtual = memVirtual
-        #Vetor que guarda todos os processos atualmente no sistema
-        self.processos = processos
+class Threads:
+    def __init__(self, pid: int,tid: int, qnt_threads: int, nome_threads: str):
+        self.pid = pid
+        self.tid = tid
+        self.qnt_threads = qnt_threads
+        self.nome_threads = nome_threads
+
+    def coletar_dados_threads(self, pid: int) -> list: #vai receber o processo específico e retorna uma lista com os dados das threads dele
+        threads = []
+        dados_threads = []
+
+        caminho = f"/proc/{pid.name}/task"
+
+        for thread in os.scandir(caminho):  #entra na pasta de threads do processo atual
+            if thread.name.isdigit(): #nome da thread é número?
+                tid = thread.name  # pega os nomes das threads e salva
+                threads.append(tid)
+                with open(f"{caminho}/{tid}/comm") as tf: #abre a theread como um objeto
+                    nome_thread = tf.read().strip() # lê e tira os espaço que podem ter na palavra
+                    dados_threads.append((tid, nome_thread)) #faz a lista de dados da thread -> Aqui que tá dando o "problema" de printar a lista toda
+                    
+                    #TO-DO (HENRIQUE): !!Tem que fazer o contador das threads e colocar os nomes das threads na classe!
+        return dados_threads
+
 
 '''PARTE DO MURILO:
 Monitorar e apresentar as informações do uso de memória dos processos; 
@@ -57,7 +74,7 @@ percentual de tempo ocioso, quantidade total de processos e threads, etc.
 2. Mostrar a lista de processos existentes juntamente com os respectivos usuários; 
 3. Mostrar informações sobre os threads de cada processo; 
 4. Mostrar informações detalhadas de cada processo. Nesse caso, as informações podem ser 
-apresentadas em uma nova tela (ou aba) que, ao ser fechada, retorna a tela principal.'''
+apresentadas em uma nova tela (ou aba) que, ao ser fechada, retorna a tela principal.''' 
 
 
 

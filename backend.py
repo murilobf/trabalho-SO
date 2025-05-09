@@ -21,7 +21,6 @@ def pegaProcessos(self) -> list[classes.Processo]:
             usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
 
             #Threads
-
             for thread in os.scandir(f"/proc/{pid.name}/task"):  #entra na pasta de threads do processo atual
                 if thread.name.isdigit(): #nome da thread é número?
                     tid = thread.name  # pega os nomes das threads e salva
