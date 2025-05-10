@@ -3,6 +3,7 @@
 import os
 import classes
 
+#Coleção dos dados
 def pegaProcessos(self) -> list[classes.Processo]:
     processos = []
     valores_necessarios = [0,1,2,3,10,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
@@ -12,6 +13,8 @@ def pegaProcessos(self) -> list[classes.Processo]:
     threads = []
 
     for pid in os.scandir("/proc/"):
+        dados_threads = []
+        threads = []
         #Processos
         if pid.name.isdigit(): #Verifica se os nomes dos processos são números
             pasta = open(f"/proc/{pid.name}/stat")
@@ -29,11 +32,21 @@ def pegaProcessos(self) -> list[classes.Processo]:
                         nome_thread = tf.read().strip() # lê e tira os espaço que podem ter na palavra
                         dados_threads.append((tid, nome_thread)) #faz a lista de dados da thread -> Aqui que tá dando o "problema" de printar a lista toda
 
+            #Memoria
+            pastasMem = open(f"/proc/{pid.name}/statm")
+            dadosMem = pastasMem.read()
+
             # Exibe dados coletados
             print(f"Usuário UID: {usuario}")
             print(f"Processo: {dados_processos}")
             print(f"Threads (TIDs): {threads}")
-            print(f"Infos das Threads: {dados_threads}\n")
+            print(f"Infos das Threads: {dados_threads}")
+            print(f"Dados memória: {dadosMem}\n")
+
+    #Memória global
+    '''dadosMem = open("/proc/meminfo")
+    infoMem = dadosMem.read()
+    print(infoMem)'''
 
 
 
