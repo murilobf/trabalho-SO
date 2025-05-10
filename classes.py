@@ -12,18 +12,28 @@ class Sistema:
 class Processo:
     
     #Função inicializadora do processo
-    def __init__(self,pid: int,nome: str,usuario: str,mem_alocada: int,qtde_paginas_total: int,qtde_paginas_codigo: int,qtde_paginas_heap: int,qtde_paginas_stack: int):
+    def __init__(self):
         
         #Dados identificadores do processo (id, nome, usuário)
+        self.pid = 0
+        self.nome = ""
+        self.usuario = ""
+        #Dados relativos ao requisito 2 do trabalho (memória)
+        self.mem_alocada = 0
+        self.qtde_paginas_total = 0
+        self.qtde_paginas_codigo = 0
+        self.qtde_paginas_heap = 0
+        self.qtde_paginas_stack = 0
+
+    def adicionaDadosBasicos(self, pid: int, nome: str, usuario: str):
         self.pid = pid
         self.nome = nome
         self.usuario = usuario
-        #Dados relativos ao requisito 2 do trabalho (memória)
-        self.mem_alocada = mem_alocada
-        self.qtde_paginas_total = qtde_paginas_total
-        self.qtde_paginas_codigo = qtde_paginas_codigo
-        self.qtde_paginas_heap = qtde_paginas_heap
-        self.qtde_paginas_stack = qtde_paginas_stack
+    
+    def printDadosBasicos(self):
+        print(f"Id: {self.pid}")
+        print(f"Nome: {self.nome}")
+        print(f"Usuario: {self.usuario}")
 
 class Threads:
     def __init__(self, pid: int,tid: int, qnt_threads: int, nome_threads: str):

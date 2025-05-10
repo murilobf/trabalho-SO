@@ -23,13 +23,15 @@ def pegaProcessos() -> list[Processo]:
         #Processos
         if pid.name.isdigit(): #Verifica se os nomes dos processos são números
             #Processo inicialmente vazio, será preenchido ao final da condicional
-            processo = Processo(pid.name,"","",0,0,0,0,0)
+            processo = Processo()
 
             pasta = open(f"/proc/{pid.name}/stat")
             processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
             dados_processos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
             
             usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
+
+            processo.adicionaDadosBasicos(pid.name, dados_processos[1],usuario)
 
             #Threads
             for thread in os.scandir(f"/proc/{pid.name}/task"):  #entra na pasta de threads do processo atual
@@ -46,12 +48,13 @@ def pegaProcessos() -> list[Processo]:
                 dadosMem = pastaMem.read().strip().split() #Lê, remove o \n no final da string e separa cada número em um elemento diferente 
 
             # Exibe dados coletados
-            print(f"Usuário UID: {usuario}")
+            '''print(f"Usuário UID: {usuario}")
             print(f"Processo: {dados_processos}")
             print(f"Threads (TIDs): {threads}")
             print(f"Infos das Threads: {dados_threads}")
-            print(f"Dados memória: {dadosMem}\n")
+            print(f"Dados memória: {dadosMem}\n")'''
 
+            processo.printDadosBasicos()
             # Adiciona o processo na lista de processos
             processos.append(processo)
 
