@@ -22,18 +22,29 @@ class Processo:
         self.mem_alocada = 0
         self.qtde_paginas_total = 0
         self.qtde_paginas_codigo = 0
-        self.qtde_paginas_heap = 0
-        self.qtde_paginas_stack = 0
+        self.qtde_paginas_outros = 0
 
     def adicionaDadosBasicos(self, pid: int, nome: str, usuario: str):
         self.pid = pid
         self.nome = nome
         self.usuario = usuario
+
+    def adicionaDadosMemoria(self, mem_alocada: int, qtde_paginas_total: int, qtde_paginas_codigo: int, qtde_paginas_outros: int):
+        self.mem_alocada = mem_alocada
+        self.qtde_paginas_total = qtde_paginas_total
+        self.qtde_paginas_codigo = qtde_paginas_codigo
+        self.qtde_paginas_outros = qtde_paginas_outros # Soma da quantidade de páginas usadas por data e por stack
     
-    def printDadosBasicos(self):
+    def printDados(self):
+        print("\nDADOS BÁSICOS:")
         print(f"Id: {self.pid}")
         print(f"Nome: {self.nome}")
         print(f"Usuario: {self.usuario}")
+        print("DADOS DE MEMÓRIA:")
+        print(f"Memória alocada: {self.mem_alocada}KB")
+        print(f"Quantidade total de páginas usadas: {self.qtde_paginas_total}")
+        print(f"Quantidade de páginas de código: {self.qtde_paginas_codigo}")
+        print(f"Quantidade de páginas usadas por data, heap e stack: {self.qtde_paginas_outros}")
 
 class Threads:
     def __init__(self, pid: int,tid: int, qnt_threads: int, nome_threads: str):

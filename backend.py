@@ -8,6 +8,7 @@ tamPaginaKb = 4
 
 #Coleção dos dados
 def pegaProcessos() -> list[Processo]:
+    processosRetorno = []
     processos = []
     valores_necessarios = [0,1,2,3,10,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
     dados_processos = []
@@ -43,9 +44,11 @@ def pegaProcessos() -> list[Processo]:
                         dados_threads.append((tid, nome_thread)) #faz a lista de dados da thread -> Aqui que tá dando o "problema" de printar a lista toda
 
             # Memoria. Nota: os dados vem todos numa única linha, é preciso separar. Nota 2: o tamanho é em páginas
-            # Os dados vem na ordem: tamanho total - 
             with open(f"/proc/{pid.name}/statm") as pastaMem: #Isso abre (e o with faz com que feche sozinha também) o arquivo 
                 dadosMem = pastaMem.read().strip().split() #Lê, remove o \n no final da string e separa cada número em um elemento diferente 
+
+            auxMemTotalKb = (int(dadosMem[0]))*tamPaginaKb # Multiplicação para tornar o dado de quantidade de páginas usadas no total para tamanho em KB
+            processo.adicionaDadosMemoria(auxMemTotalKb,dadosMem[0],dadosMem[3],dadosMem[5]) #memTotal em kb, memTotal em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
 
             # Exibe dados coletados
             '''print(f"Usuário UID: {usuario}")
@@ -54,17 +57,20 @@ def pegaProcessos() -> list[Processo]:
             print(f"Infos das Threads: {dados_threads}")
             print(f"Dados memória: {dadosMem}\n")'''
 
-            processo.printDadosBasicos()
+            #processo.printDados()
             # Adiciona o processo na lista de processos
-            processos.append(processo)
+            processosRetorno.append(processo)
 
     # Memória global
     '''with open("/proc/meminfo") as dadosMem:
         for linhaDadosMem in dadosMem:
             print(linhaDadosMem)'''
 
-    return processos
+    return processosRetorno
 
 
 # Cria a lista de processos
 processos = pegaProcessos()
+
+for processo in processos:
+    processo.printDados()
