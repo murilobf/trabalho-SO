@@ -1,10 +1,13 @@
 '''https://stackoverflow.com/questions/39066998/what-are-the-meaning-of-values-at-proc-pid-stat'''
 
 import os
-import classes
+from classes import Processo, Sistema
+
+#variavel usada pra transformar dados de memória de número de páginas para quantidade em KB
+tamPaginaKb = 4
 
 #Coleção dos dados
-def pegaProcessos(self) -> list[classes.Processo]:
+def pegaProcessos() -> list[Processo]:
     processos = []
     valores_necessarios = [0,1,2,3,10,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
     dados_processos = []
@@ -14,9 +17,14 @@ def pegaProcessos(self) -> list[classes.Processo]:
 
     for pid in os.scandir("/proc/"):
         dados_threads = []
-        threads = []
+        dadosMem = []
+        threads = [] 
+
         #Processos
         if pid.name.isdigit(): #Verifica se os nomes dos processos são números
+            #Processo inicialmente vazio, será preenchido ao final da condicional
+            processo = Processo(pid.name,"","",0,0,0,0,0)
+
             pasta = open(f"/proc/{pid.name}/stat")
             processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
             dados_processos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
@@ -32,9 +40,10 @@ def pegaProcessos(self) -> list[classes.Processo]:
                         nome_thread = tf.read().strip() # lê e tira os espaço que podem ter na palavra
                         dados_threads.append((tid, nome_thread)) #faz a lista de dados da thread -> Aqui que tá dando o "problema" de printar a lista toda
 
-            #Memoria
-            pastasMem = open(f"/proc/{pid.name}/statm")
-            dadosMem = pastasMem.read()
+            # Memoria. Nota: os dados vem todos numa única linha, é preciso separar. Nota 2: o tamanho é em páginas
+            # Os dados vem na ordem: tamanho total - 
+            with open(f"/proc/{pid.name}/statm") as pastaMem: #Isso abre (e o with faz com que feche sozinha também) o arquivo 
+                dadosMem = pastaMem.read().strip().split() #Lê, remove o \n no final da string e separa cada número em um elemento diferente 
 
             # Exibe dados coletados
             print(f"Usuário UID: {usuario}")
@@ -43,11 +52,16 @@ def pegaProcessos(self) -> list[classes.Processo]:
             print(f"Infos das Threads: {dados_threads}")
             print(f"Dados memória: {dadosMem}\n")
 
-    #Memória global
-    '''dadosMem = open("/proc/meminfo")
-    infoMem = dadosMem.read()
-    print(infoMem)'''
+            # Adiciona o processo na lista de processos
+            processos.append(processo)
+
+    # Memória global
+    '''with open("/proc/meminfo") as dadosMem:
+        for linhaDadosMem in dadosMem:
+            print(linhaDadosMem)'''
+
+    return processos
 
 
-
-pegaProcessos(None)
+# Cria a lista de processos
+processos = pegaProcessos()
