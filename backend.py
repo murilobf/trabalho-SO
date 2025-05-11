@@ -6,7 +6,10 @@ from classes import Processo, Sistema
 #variavel usada pra transformar dados de memória de número de páginas para quantidade em KB
 tamPaginaKb = 4
 
-#Coleção dos dados
+#========================#
+#SEÇÃO DE COLEÇÃO DE DADOS
+#========================#
+
 def pegaProcessos() -> list[Processo]:
     processosRetorno = []
     processos = []
@@ -78,13 +81,28 @@ def pegaGlobal() -> Sistema:
 
     return sistemaRetorno
 
+#============================#
+#SEÇÃO DE TRATAMENTO DOS DADOS
+#============================#
+
+#Ca
+def calculaPercentualMemoria(sistema: Sistema):
+    memTotal = float(sistema.memFisica)
+    memLivre = float(sistema.memLivre)
+
+    percentualMemLivre = round(100*memLivre/memTotal, 2)
+    percentualMemOcupada = round(100*(memTotal-memLivre)/memTotal, 2)
+
+    sistema.adicionaPorcentagensMemoria(percentualMemLivre, percentualMemOcupada)
     
-        
+           
 
 # Cria a lista de processos
 processos = pegaProcessos()
 
-pegaGlobal()
+sistema = pegaGlobal()
 
-#for processo in processos:
- #   processo.printDados()
+calculaPercentualMemoria(sistema)
+
+print(sistema.percentualMemLivre)
+print(sistema.percentualMemOcupada)

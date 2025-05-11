@@ -4,14 +4,20 @@ class Sistema:
         self.memLivre = 0
         self.memFisica = 0
         self.memVirtual = 0
+        self.percentualMemLivre = 0
+        self.percentualMemOcupada = 0
         #Vetor que guarda todos os processos atualmente no sistema
         self.processos = []
 
-    def adicionaDadosMemoria(self, memFisica, memLivre, memVirtual):
+    def adicionaDadosMemoria(self, memFisica: int, memLivre: int, memVirtual: int):
         
         self.memFisica = memFisica
         self.memLivre = memLivre
         self.memVirtual = memVirtual
+
+    def adicionaPorcentagensMemoria(self, percentualMemLivre: float, percentualMemOcupada: float):
+        self.percentualMemLivre = percentualMemLivre
+        self.percentualMemOcupada = percentualMemOcupada
 
     def adicionaProcessos(self, processos):
         self.processos = processos
