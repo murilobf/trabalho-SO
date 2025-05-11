@@ -1,11 +1,19 @@
 class Sistema:
-    def __init__(self, memTotal, memLivre, memFisica, memVirtual, processos):
+    def __init__(self):
         #Dados de memória
-        self.memTotal = memTotal
-        self.memLivre = memLivre
-        self.memFisica = memFisica
-        self.memVirtual = memVirtual
+        self.memLivre = 0
+        self.memFisica = 0
+        self.memVirtual = 0
         #Vetor que guarda todos os processos atualmente no sistema
+        self.processos = []
+
+    def adicionaDadosMemoria(self, memFisica, memLivre, memVirtual):
+        
+        self.memFisica = memFisica
+        self.memLivre = memLivre
+        self.memVirtual = memVirtual
+
+    def adicionaProcessos(self, processos):
         self.processos = processos
 
 #Classe que armaeznea os dados de um processo
@@ -41,7 +49,7 @@ class Processo:
         print(f"Nome: {self.nome}")
         print(f"Usuario: {self.usuario}")
         print("DADOS DE MEMÓRIA:")
-        print(f"Memória alocada: {self.mem_alocada}KB")
+        print(f"Memória alocada: {self.mem_alocada}kB")
         print(f"Quantidade total de páginas usadas: {self.qtde_paginas_total}")
         print(f"Quantidade de páginas de código: {self.qtde_paginas_codigo}")
         print(f"Quantidade de páginas usadas por data, heap e stack: {self.qtde_paginas_outros}")

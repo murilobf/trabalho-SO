@@ -26,13 +26,14 @@ def pegaProcessos() -> list[Processo]:
             #Processo inicialmente vazio, será preenchido ao final da condicional
             processo = Processo()
 
-            pasta = open(f"/proc/{pid.name}/stat")
-            processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
-            dados_processos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
-            
-            usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
+            with open(f"/proc/{pid.name}/stat") as pasta:
+                processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
+                dados_processos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
+                
+                usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
+                #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
 
-            processo.adicionaDadosBasicos(pid.name, dados_processos[1],usuario)
+            processo.adicionaDadosBasicos(pid.name, dados_processos[1],usuario) #Adiciona id, nome do processo e o id do usuário
 
             #Threads
             for thread in os.scandir(f"/proc/{pid.name}/task"):  #entra na pasta de threads do processo atual
@@ -61,16 +62,29 @@ def pegaProcessos() -> list[Processo]:
             # Adiciona o processo na lista de processos
             processosRetorno.append(processo)
 
-    # Memória global
-    '''with open("/proc/meminfo") as dadosMem:
-        for linhaDadosMem in dadosMem:
-            print(linhaDadosMem)'''
-
     return processosRetorno
 
+# Pega os dados globais do sistema
+def pegaGlobal() -> Sistema:
+
+    sistemaRetorno = Sistema()
+    dadosMem = []
+
+    dadosSistema = Sistema( )
+    with open("/proc/meminfo") as pastaMem:
+        dadosMem = pastaMem.read().strip().split() #Não é o melhor método já que isso gera um vetor de >100 posições mas funciona
+
+    sistemaRetorno.adicionaDadosMemoria(dadosMem[1], dadosMem[4], dadosMem[97]) #Memória física total, Memória física livre e total de memória virtual
+
+    return sistemaRetorno
+
+    
+        
 
 # Cria a lista de processos
 processos = pegaProcessos()
 
-for processo in processos:
-    processo.printDados()
+pegaGlobal()
+
+#for processo in processos:
+ #   processo.printDados()
