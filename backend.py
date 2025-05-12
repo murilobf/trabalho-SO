@@ -1,7 +1,7 @@
 '''https://stackoverflow.com/questions/39066998/what-are-the-meaning-of-values-at-proc-pid-stat'''
 
 import os
-from classes import Processo, Sistema
+from classes import Processo, Sistema, Threads
 
 #variavel usada pra transformar dados de memória de número de páginas para quantidade em KB
 tamPaginaKb = 4
@@ -9,88 +9,6 @@ tamPaginaKb = 4
 #========================#
 #SEÇÃO DE COLEÇÃO DE DADOS
 #========================#
-
-def pegaProcessos() -> list[Processo]:
-    processosRetorno = []
-    processos = []
-    valores_necessarios = [0,1,2,3,10,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
-    dados_processos = []
-    
-    dados_threads = []
-    threads = []
-
-    for pid in os.scandir("/proc/"):
-        dados_threads = []
-        dadosMem = []
-        threads = [] 
-
-        #Processos
-        if pid.name.isdigit(): #Verifica se os nomes dos processos são números
-            #Processo inicialmente vazio, será preenchido ao final da condicional
-            processo = Processo()
-
-            with open(f"/proc/{pid.name}/stat") as pasta:
-                processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
-                dados_processos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
-                
-                usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
-                #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
-
-            processo.adicionaDadosBasicos(pid.name, dados_processos[1],usuario) #Adiciona id, nome do processo e o id do usuário
-
-            #coleta_dados_processos()
-            #coleta_dados_thread(pid)
-
-            # Memoria. Nota: os dados vem todos numa única linha, é preciso separar. Nota 2: o tamanho é em páginas
-            with open(f"/proc/{pid.name}/statm") as pastaMem: #Isso abre (e o with faz com que feche sozinha também) o arquivo 
-                dadosMem = pastaMem.read().strip().split() #Lê, remove o \n no final da string e separa cada número em um elemento diferente 
-
-            auxMemTotalKb = (int(dadosMem[0]))*tamPaginaKb # Multiplicação para tornar o dado de quantidade de páginas usadas no total para tamanho em KB
-            processo.adicionaDadosMemoria(auxMemTotalKb,dadosMem[0],dadosMem[3],dadosMem[5]) #memTotal em kb, memTotal em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
-
-            # Exibe dados coletados
-            '''print(f"Usuário UID: {usuario}")
-            print(f"Processo: {dados_processos}")
-            print(f"Threads (TIDs): {threads}")
-            print(f"Infos das Threads: {dados_threads}")
-            print(f"Dados memória: {dadosMem}\n")'''
-
-            #processo.printDados()
-            # Adiciona o processo na lista de processos
-            processosRetorno.append(processo)
-
-    return processosRetorno
-
-#def coletar_dados_processos(self) ->list(classes.Processos):
-
-# 0.1 Criar função para coletar dados globais dos processos - done
-
-# 0.1.1 Mostrar os dados de cada processo e seus respectivos usuários - done
-
-# 0.2 Criar função para coletar dados das threads  - done
-
-# 1 - Criar função para coletar os dados de cada processo 
-
-# 2 - Criar função para coletar os dados de cada thread -> def coletar_threads_processo (self, pid)
-
-# 3 - Criar função para 
-
-def coletar_dados_threads(self, pid: int) -> list[classes.Threads]: #vai receber o processo específico e retorna uma lista com os dados das threads dele
-    threads = []
-    dados_threads = []
-
-    caminho = f"/proc/{pid.name}/task"
-
-    for thread in os.scandir(caminho):  #entra na pasta de threads do processo atual
-        if thread.name.isdigit(): #nome da thread é número?
-            tid = thread.name  # pega os nomes das threads e salva
-            threads.append(tid)
-            with open(f"{caminho}/{tid}/comm") as tf: #abre a theread como um objeto
-                nome_thread = tf.read().strip() # lê e tira os espaço que podem ter na palavra
-                dados_threads.append((tid, nome_thread)) #faz a lista de dados da thread -> Aqui que tá dando o "problema" de printar a lista toda
-                    
-                #TO-DO (HENRIQUE): !!Tem que fazer o contador das threads e colocar os nomes das threads na classe!
-    return dados_threads
 
 # Pega os dados globais do sistema
 def pegaGlobal() -> Sistema:
@@ -105,6 +23,60 @@ def pegaGlobal() -> Sistema:
     sistemaRetorno.adicionaDadosMemoria(dadosMem[1], dadosMem[4], dadosMem[97]) #Memória física total, Memória física livre e total de memória virtual
 
     return sistemaRetorno
+
+def pegaProcessos() -> list[Processo]:
+    processosRetorno = []
+    processos = []
+    valores_necessarios = [0,1,2,3,10,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
+    dados_processos = []
+
+    for pid in os.scandir("/proc/"):
+        dadosMem = []
+        #Processos
+        if pid.name.isdigit(): #Verifica se os nomes dos processos são números
+            #Processo inicialmente vazio, será preenchido ao final da condicional
+            processo = Processo()
+
+            with open(f"/proc/{pid.name}/stat") as pasta:
+                processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
+                dados_processos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
+                usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
+                #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
+
+            processo.adicionaDadosBasicos(pid.name, dados_processos[1], usuario) #Adiciona id, nome do processo e o id do usuário
+            
+            #Threads
+            threads = (coletar_dados_threads(pid.name))
+            processo.adicionaThreads(threads)
+
+            # Memoria. Nota: os dados vem todos numa única linha, é preciso separar. Nota 2: o tamanho é em páginas
+            with open(f"/proc/{pid.name}/statm") as pastaMem: #Isso abre (e o with faz com que feche sozinha também) o arquivo 
+                dadosMem = pastaMem.read().strip().split() #Lê, remove o \n no final da string e separa cada número em um elemento diferente 
+
+            auxMemTotalKb = (int(dadosMem[0]))*tamPaginaKb # Multiplicação para tornar o dado de quantidade de páginas usadas no total para tamanho em KB
+            processo.adicionaDadosMemoria(auxMemTotalKb,dadosMem[0],dadosMem[3],dadosMem[5]) #memTotal em kb, memTotal em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
+
+            # Adiciona o processo na lista de processos
+            processosRetorno.append(processo)
+
+    return processosRetorno
+
+#===> def coletar_dados_processos(self) ->list(classes.Processos):
+
+def coletar_dados_threads(self, pid: int) -> list[Threads]: #vai receber o processo específico e retorna uma lista com os dados das threads dele
+    dados_threads = []
+    caminho = f"/proc/{pid.name}/task"
+    qnt_threads = 0
+
+    for thread in os.scandir(caminho):  #entra na pasta de threads do processo atual
+        if thread.name.isdigit(): #nome da thread é número?
+            tid = int(thread.name)  # pega os nomes das threads e salva
+            with open(f"{caminho}/{tid}/comm") as t: #abre a theread como um objeto
+                nome_thread = t.read().strip() # lê e tira os espaço que podem ter na palavra
+                qnt_threads += 1
+            dados_threads.append(Threads(pid, tid, qnt_threads, nome_thread)) #faz a lista de dados da thread -> Aqui que tá dando o "problema" de printar a lista toda
+
+    return dados_threads
 
 #============================#
 #SEÇÃO DE TRATAMENTO DOS DADOS
@@ -129,4 +101,3 @@ calculaPercentualMemoria(sistema)
 
 print(sistema.percentualMemLivre)
 print(sistema.percentualMemOcupada)
-
