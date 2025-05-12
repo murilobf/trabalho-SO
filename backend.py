@@ -38,14 +38,8 @@ def pegaProcessos() -> list[Processo]:
 
             processo.adicionaDadosBasicos(pid.name, dados_processos[1],usuario) #Adiciona id, nome do processo e o id do usuário
 
-            #Threads
-            for thread in os.scandir(f"/proc/{pid.name}/task"):  #entra na pasta de threads do processo atual
-                if thread.name.isdigit(): #nome da thread é número?
-                    tid = thread.name  # pega os nomes das threads e salva
-                    threads.append(tid)
-                    with open(f"/proc/{pid.name}/task/{tid}/comm") as tf: #abre a theread como um objeto
-                        nome_thread = tf.read().strip() # lê e tira os espaço que podem ter na palavra
-                        dados_threads.append((tid, nome_thread)) #faz a lista de dados da thread -> Aqui que tá dando o "problema" de printar a lista toda
+            #coleta_dados_processos()
+            #coleta_dados_thread(pid)
 
             # Memoria. Nota: os dados vem todos numa única linha, é preciso separar. Nota 2: o tamanho é em páginas
             with open(f"/proc/{pid.name}/statm") as pastaMem: #Isso abre (e o with faz com que feche sozinha também) o arquivo 
@@ -66,6 +60,37 @@ def pegaProcessos() -> list[Processo]:
             processosRetorno.append(processo)
 
     return processosRetorno
+
+#def coletar_dados_processos(self) ->list(classes.Processos):
+
+# 0.1 Criar função para coletar dados globais dos processos - done
+
+# 0.1.1 Mostrar os dados de cada processo e seus respectivos usuários - done
+
+# 0.2 Criar função para coletar dados das threads  - done
+
+# 1 - Criar função para coletar os dados de cada processo 
+
+# 2 - Criar função para coletar os dados de cada thread -> def coletar_threads_processo (self, pid)
+
+# 3 - Criar função para 
+
+def coletar_dados_threads(self, pid: int) -> list[classes.Threads]: #vai receber o processo específico e retorna uma lista com os dados das threads dele
+    threads = []
+    dados_threads = []
+
+    caminho = f"/proc/{pid.name}/task"
+
+    for thread in os.scandir(caminho):  #entra na pasta de threads do processo atual
+        if thread.name.isdigit(): #nome da thread é número?
+            tid = thread.name  # pega os nomes das threads e salva
+            threads.append(tid)
+            with open(f"{caminho}/{tid}/comm") as tf: #abre a theread como um objeto
+                nome_thread = tf.read().strip() # lê e tira os espaço que podem ter na palavra
+                dados_threads.append((tid, nome_thread)) #faz a lista de dados da thread -> Aqui que tá dando o "problema" de printar a lista toda
+                    
+                #TO-DO (HENRIQUE): !!Tem que fazer o contador das threads e colocar os nomes das threads na classe!
+    return dados_threads
 
 # Pega os dados globais do sistema
 def pegaGlobal() -> Sistema:
@@ -95,8 +120,6 @@ def calculaPercentualMemoria(sistema: Sistema):
 
     sistema.adicionaPorcentagensMemoria(percentualMemLivre, percentualMemOcupada)
     
-           
-
 # Cria a lista de processos
 processos = pegaProcessos()
 
@@ -106,3 +129,4 @@ calculaPercentualMemoria(sistema)
 
 print(sistema.percentualMemLivre)
 print(sistema.percentualMemOcupada)
+

@@ -67,22 +67,7 @@ class Threads:
         self.qnt_threads = qnt_threads
         self.nome_threads = nome_threads
 
-    def coletar_dados_threads(self, pid: int) -> list: #vai receber o processo específico e retorna uma lista com os dados das threads dele
-        threads = []
-        dados_threads = []
-
-        caminho = f"/proc/{pid.name}/task"
-
-        for thread in os.scandir(caminho):  #entra na pasta de threads do processo atual
-            if thread.name.isdigit(): #nome da thread é número?
-                tid = thread.name  # pega os nomes das threads e salva
-                threads.append(tid)
-                with open(f"{caminho}/{tid}/comm") as tf: #abre a theread como um objeto
-                    nome_thread = tf.read().strip() # lê e tira os espaço que podem ter na palavra
-                    dados_threads.append((tid, nome_thread)) #faz a lista de dados da thread -> Aqui que tá dando o "problema" de printar a lista toda
-                    
-                    #TO-DO (HENRIQUE): !!Tem que fazer o contador das threads e colocar os nomes das threads na classe!
-        return dados_threads
+    
 
 
 '''PARTE DO MURILO:
