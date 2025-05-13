@@ -1,3 +1,6 @@
+#variavel usada pra transformar dados de memória de número de páginas para quantidade em KB
+tamPaginakB = 4
+
 class Sistema:
     def __init__(self):
         #Dados de memória
@@ -10,7 +13,6 @@ class Sistema:
         self.processos = []
 
     def adicionaDadosMemoria(self, memFisica: int, memLivre: int, memVirtual: int):
-        
         self.memFisica = memFisica
         self.memLivre = memLivre
         self.memVirtual = memVirtual
@@ -39,7 +41,12 @@ class Processo:
         self.qtde_paginas_outros = 0
         self.threads = []
 
-    def adicionaDadosBasicos(self, pid: int, nome: str, usuario: str, threads: threads):
+    def calculaPaginaPkB(self, dadoPag):
+        auxMemTotalKb = (int(dadoPag)*tamPaginakB) # Multiplicação para tornar o dado de quantidade de páginas usadas no total para tamanho em KB
+
+        return auxMemTotalKb
+
+    def adicionaDadosBasicos(self, pid: int, nome: str, usuario: str):
         self.pid = pid
         self.nome = nome
         self.usuario = usuario
@@ -47,11 +54,13 @@ class Processo:
     def adicionaThreads(self, threads: list):
         self.threads = threads
 
-    def adicionaDadosMemoria(self, mem_alocada: int, qtde_paginas_total: int, qtde_paginas_codigo: int, qtde_paginas_outros: int):
-        self.mem_alocada = mem_alocada
+    def adicionaDadosMemoria(self, qtde_paginas_total: int, qtde_paginas_codigo: int, qtde_paginas_outros: int):
+        self.mem_alocada = self.calculaPaginaPkB(qtde_paginas_total)
         self.qtde_paginas_total = qtde_paginas_total
         self.qtde_paginas_codigo = qtde_paginas_codigo
         self.qtde_paginas_outros = qtde_paginas_outros # Soma da quantidade de páginas usadas por data e por stack
+    
+    
     
     def printDados(self):
         print("\nDADOS BÁSICOS:")

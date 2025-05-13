@@ -3,8 +3,6 @@
 import os
 from classes import Processo, Sistema, Threads
 
-#variavel usada pra transformar dados de memória de número de páginas para quantidade em KB
-tamPaginaKb = 4
 
 #========================#
 #SEÇÃO DE COLEÇÃO DE DADOS
@@ -14,16 +12,20 @@ tamPaginaKb = 4
 def pegaGlobal() -> Sistema:
 
     sistemaRetorno = Sistema()
-    dadosMem = []
 
-    dadosSistema = Sistema( )
-    with open("/proc/meminfo") as pastaMem:
-        dadosMem = pastaMem.read().strip().split() #Não é o melhor método já que isso gera um vetor de >100 posições mas funciona
-
+    dadosMem = coletar_dados_memoria_sistema()
     sistemaRetorno.adicionaDadosMemoria(dadosMem[1], dadosMem[4], dadosMem[97]) #Memória física total, Memória física livre e total de memória virtual
 
     return sistemaRetorno
 
+def coletar_dados_memoria_sistema():
+    with open("/proc/meminfo") as pastaMem:
+        dadosMem = pastaMem.read().strip().split() 
+        #OBS: Não é o melhor método já que isso gera um vetor de >100 posições mas funciona e permite que outros dados sejam extraidos mais facilmente
+
+    return dadosMem
+
+#Pega os processos do sistema e seus dados
 def pegaProcessos() -> list[Processo]:
     processosRetorno = []
     processos = []
@@ -31,7 +33,7 @@ def pegaProcessos() -> list[Processo]:
     dados_processos = []
 
     for pid in os.scandir("/proc/"):
-        dadosMem = []
+        
         #Processos
         if pid.name.isdigit(): #Verifica se os nomes dos processos são números
             #Processo inicialmente vazio, será preenchido ao final da condicional
@@ -49,12 +51,9 @@ def pegaProcessos() -> list[Processo]:
             threads = (coletar_dados_threads(pid.name))
             processo.adicionaThreads(threads)
 
-            # Memoria. Nota: os dados vem todos numa única linha, é preciso separar. Nota 2: o tamanho é em páginas
-            with open(f"/proc/{pid.name}/statm") as pastaMem: #Isso abre (e o with faz com que feche sozinha também) o arquivo 
-                dadosMem = pastaMem.read().strip().split() #Lê, remove o \n no final da string e separa cada número em um elemento diferente 
-
-            auxMemTotalKb = (int(dadosMem[0]))*tamPaginaKb # Multiplicação para tornar o dado de quantidade de páginas usadas no total para tamanho em KB
-            processo.adicionaDadosMemoria(auxMemTotalKb,dadosMem[0],dadosMem[3],dadosMem[5]) #memTotal em kb, memTotal em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
+            # Coleta e guarda a memória do processo
+            dadosMem = coletar_dados_memoria(pid.name)
+            processo.adicionaDadosMemoria(dadosMem[0],dadosMem[3],dadosMem[5]) #memTotal em kb, memTotal em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
 
             # Adiciona o processo na lista de processos
             processosRetorno.append(processo)
@@ -63,9 +62,17 @@ def pegaProcessos() -> list[Processo]:
 
 #===> def coletar_dados_processos(self) ->list(classes.Processos):
 
-def coletar_dados_threads(self, pid: int) -> list[Threads]: #vai receber o processo específico e retorna uma lista com os dados das threads dele
+def coletar_dados_memoria(pid: int):
+    # Memoria. Nota: os dados vem todos numa única linha, é preciso separar. Nota 2: o tamanho é em páginas
+    with open(f"/proc/{pid}/statm") as pastaMem: #Isso abre (e o with faz com que feche sozinha também) o arquivo 
+        dadosMem = pastaMem.read().strip().split() #Lê, remove o \n no final da string e separa cada número em um elemento diferente 
+    
+    return dadosMem
+
+
+def coletar_dados_threads(pid: int) -> list[Threads]: #vai receber o processo específico e retorna uma lista com os dados das threads dele
     dados_threads = []
-    caminho = f"/proc/{pid.name}/task"
+    caminho = f"/proc/{pid}/task"
     qnt_threads = 0
 
     for thread in os.scandir(caminho):  #entra na pasta de threads do processo atual
@@ -97,7 +104,7 @@ processos = pegaProcessos()
 
 sistema = pegaGlobal()
 
-calculaPercentualMemoria(sistema)
+'''calculaPercentualMemoria(sistema)
 
 print(sistema.percentualMemLivre)
-print(sistema.percentualMemOcupada)
+print(sistema.percentualMemOcupada)'''
