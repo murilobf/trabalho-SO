@@ -1,8 +1,8 @@
 '''https://stackoverflow.com/questions/39066998/what-are-the-meaning-of-values-at-proc-pid-stat'''
 
 import os
+import time
 from classes import Processo, Sistema, Threads
-
 
 #========================#
 #SEÇÃO DE COLEÇÃO DE DADOS
@@ -16,6 +16,9 @@ def pegaGlobal() -> Sistema:
     dadosMem = coletar_dados_memoria_sistema()
     sistemaRetorno.adicionaDadosMemoria(dadosMem[1], dadosMem[4], dadosMem[97]) #Memória física total, Memória física livre e total de memória virtual
 
+    processos = pegaProcessos()
+    sistemaRetorno.adicionaProcessos(processos)
+
     return sistemaRetorno
 
 def coletar_dados_memoria_sistema():
@@ -26,11 +29,25 @@ def coletar_dados_memoria_sistema():
     return dadosMem
 
 #Pega os processos do sistema e seus dados  
+def coletar_dados_processador() -> list:
+    with open("/proc/stat") as pastaProc:
+        dadosProc = pastaProc.read().strip().split()
+
+    return dadosProc
+
+def coletar_infos_processo(pid) -> list:
+    valores_necessarios = [0,1,2,3,10,13,14,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
+    dados_processos = []
+
+    with open(f"/proc/{pid}/stat") as pasta:
+        processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
+        dados_processos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
+        
+    return dados_processos
+
+#Pega os processos do sistema e seus dados
 def pegaProcessos() -> list[Processo]:
     processosRetorno = []
-    processos = []
-    valores_necessarios = [0,1,2,3,10,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
-    dados_processos = []
 
     for pid in os.scandir("/proc/"):
         
@@ -39,13 +56,13 @@ def pegaProcessos() -> list[Processo]:
             #Processo inicialmente vazio, será preenchido ao final da condicional
             processo = Processo()
 
-            with open(f"/proc/{pid.name}/stat") as pasta:
-                processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
-                dados_processos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
-                usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
-                #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
+            #Coleta todos os dados do processo
+            dados_processo = coletar_infos_processo(pid.name)
+            
+            #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
+            usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
 
-            processo.adicionaDadosBasicos(pid.name, dados_processos[1], usuario) #Adiciona id, nome do processo e o id do usuário
+            processo.adicionaDadosBasicos(pid.name, dados_processo[1], usuario) #Adiciona id, nome do processo e o id do usuário
             
             #Threads
             threads = (coletar_dados_threads(pid.name))
@@ -60,6 +77,8 @@ def pegaProcessos() -> list[Processo]:
 
     return processosRetorno
 
+# 0.3 Calcular % do uso do processador #
+
 #===> def coletar_dados_processos(self) ->list(classes.Processos):
 
 def coletar_dados_memoria(pid: int):
@@ -68,7 +87,6 @@ def coletar_dados_memoria(pid: int):
         dadosMem = pastaMem.read().strip().split() #Lê, remove o \n no final da string e separa cada número em um elemento diferente 
     
     return dadosMem
-
 
 def coletar_dados_threads(pid: int) -> list[Threads]: #vai receber o processo específico e retorna uma lista com os dados das threads dele
     dados_threads = []
@@ -89,22 +107,34 @@ def coletar_dados_threads(pid: int) -> list[Threads]: #vai receber o processo es
 #SEÇÃO DE TRATAMENTO DOS DADOS
 #============================#
 
-#Ca
+# Calcula o porcentual de memória usado pelo sistema no momento
 def calculaPercentualMemoria(sistema: Sistema):
     memTotal = float(sistema.memFisica)
     memLivre = float(sistema.memLivre)
 
     percentualMemLivre = round(100*memLivre/memTotal, 2)
-    percentualMemOcupada = round(100*(memTotal-memLivre)/memTotal, 2)
+    percentualMemOcupada = 100 - percentualMemLivre
 
     sistema.adicionaPorcentagensMemoria(percentualMemLivre, percentualMemOcupada)
+
+# Calcula uso da cpu por um processo em um intervalo de tempo
+def calcular_uso_processador (sistema: Sistema) -> float:
+    dados_processo = coletar_dados_processador()
+    #Aqui pega os dados de tempo    
+    soma = float(dados_processo[1]) + float(dados_processo[2]) + float(dados_processo[3])
+    
+    percentualProcessadorLivre = round(100 * (soma / (float(dados_processo[4]) + soma)), 10)
+    percentualProcessadorOcupado = 100 - percentualProcessadorLivre
+
+    sistema.adicionaPorcentagensProcessador(percentualProcessadorLivre, percentualProcessadorOcupado    )
+    
     
 # Cria a lista de processos
-processos = pegaProcessos()
+'''processos = pegaProcessos()
 
 sistema = pegaGlobal()
 
-'''calculaPercentualMemoria(sistema)
+calculaPercentualMemoria(sistema)
 
 print(sistema.percentualMemLivre)
 print(sistema.percentualMemOcupada)'''

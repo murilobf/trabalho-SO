@@ -3,6 +3,9 @@ tamPaginakB = 4
 
 class Sistema:
     def __init__(self):
+        #Dados do processador
+        self.percentualProcessadorLivre = 0
+        self.percentualProcessadorOcupado = 0
         #Dados de memória
         self.memLivre = 0
         self.memFisica = 0
@@ -20,6 +23,11 @@ class Sistema:
     def adicionaPorcentagensMemoria(self, percentualMemLivre: float, percentualMemOcupada: float):
         self.percentualMemLivre = percentualMemLivre
         self.percentualMemOcupada = percentualMemOcupada
+
+    def adicionaPorcentagensProcessador(self, percentualProcessadorLivre: float, percentualProcessadorOcupado: float):
+        self.percentualProcessadorLivre = percentualProcessadorLivre
+        self.percentualProcessadorOcupado = percentualProcessadorOcupado
+        
 
     def adicionaProcessos(self, processos):
         self.processos = processos
@@ -84,7 +92,3 @@ class Threads:
         self.tid = tid
         self.qnt_thread = qnt_thread
         self.nome_thread = nome_thread
-
-class BufferSistema:
-    def __init__(self, sistema: Sistema):
-        self.sistema = sistema
