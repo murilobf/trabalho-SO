@@ -25,7 +25,7 @@ def coletar_dados_memoria_sistema():
 
     return dadosMem
 
-#Pega os processos do sistema e seus dados
+#Pega os processos do sistema e seus dados  
 def pegaProcessos() -> list[Processo]:
     processosRetorno = []
     processos = []

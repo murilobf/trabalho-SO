@@ -24,6 +24,10 @@ class Sistema:
     def adicionaProcessos(self, processos):
         self.processos = processos
 
+    def retornaProcessos(self):
+        return self.processos
+
+
 #Classe que armazena os dados de um processo
 class Processo:
     
@@ -60,8 +64,6 @@ class Processo:
         self.qtde_paginas_codigo = qtde_paginas_codigo
         self.qtde_paginas_outros = qtde_paginas_outros # Soma da quantidade de páginas usadas por data e por stack
     
-    
-    
     def printDados(self):
         print("\nDADOS BÁSICOS:")
         print(f"Id: {self.pid}")
@@ -73,9 +75,16 @@ class Processo:
         print(f"Quantidade de páginas de código: {self.qtde_paginas_codigo}")
         print(f"Quantidade de páginas usadas por data, heap e stack: {self.qtde_paginas_outros}")
 
+    def retornaStringDados(self):
+        return "{self.pid} - {self.nome} - {self.usuario} - {self.mem_alocada}"
+
 class Threads:
     def __init__(self, pid: int, tid: int, qnt_thread: int, nome_thread: str):
         self.pid = pid
         self.tid = tid
         self.qnt_thread = qnt_thread
         self.nome_thread = nome_thread
+
+class BufferSistema:
+    def __init__(self, sistema: Sistema):
+        self.sistema = sistema
