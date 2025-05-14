@@ -1,8 +1,8 @@
 '''https://stackoverflow.com/questions/39066998/what-are-the-meaning-of-values-at-proc-pid-stat'''
 
 import os
+import time
 from classes import Processo, Sistema, Threads
-
 
 #========================#
 #SEÇÃO DE COLEÇÃO DE DADOS
@@ -25,12 +25,28 @@ def coletar_dados_memoria_sistema():
 
     return dadosMem
 
+def coletar_dados_processador() -> list:
+    with open("/proc/stat") as pastaProc:
+        dadosProc = pastaProc.read().strip().split()
+
+    return dadosProc
+
+def coletar_infos_processo(pid) -> list:
+    valores_necessarios = [0,1,2,3,10,13,14,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
+    dados_processos = []
+
+    with open(f"/proc/{pid}/stat") as pasta:
+        processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
+        dados_processos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
+        
+    return dados_processos
+
 #Pega os processos do sistema e seus dados
 def pegaProcessos() -> list[Processo]:
     processosRetorno = []
     processos = []
-    valores_necessarios = [0,1,2,3,10,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
     dados_processos = []
+    uso_processador = 0
 
     for pid in os.scandir("/proc/"):
         
@@ -39,11 +55,13 @@ def pegaProcessos() -> list[Processo]:
             #Processo inicialmente vazio, será preenchido ao final da condicional
             processo = Processo()
 
-            with open(f"/proc/{pid.name}/stat") as pasta:
-                processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
-                dados_processos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
-                usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
-                #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
+            #Coleta todos os dados do processo
+            dados_processo = coletar_infos_processo(pid.name)
+            
+            #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
+            usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
+
+            uso_processador = calcular_uso_processador(pid,5)
 
             processo.adicionaDadosBasicos(pid.name, dados_processos[1], usuario) #Adiciona id, nome do processo e o id do usuário
             
@@ -60,6 +78,15 @@ def pegaProcessos() -> list[Processo]:
 
     return processosRetorno
 
+# 0.3 Calcular % do uso do processador #
+
+# Calcula uso da cpu por um processo em um intervalo de tempo
+def calcular_uso_processador () -> int:
+    dados_processo = coletar_dados_processador()
+    soma = int(dados_processo[1]) + int(dados_processo[2]) + int(dados_processo[3])
+    return round(100 * (soma / (int(dados_processo[4]) + soma)), 10)
+
+
 #===> def coletar_dados_processos(self) ->list(classes.Processos):
 
 def coletar_dados_memoria(pid: int):
@@ -68,7 +95,6 @@ def coletar_dados_memoria(pid: int):
         dadosMem = pastaMem.read().strip().split() #Lê, remove o \n no final da string e separa cada número em um elemento diferente 
     
     return dadosMem
-
 
 def coletar_dados_threads(pid: int) -> list[Threads]: #vai receber o processo específico e retorna uma lista com os dados das threads dele
     dados_threads = []
@@ -100,11 +126,11 @@ def calculaPercentualMemoria(sistema: Sistema):
     sistema.adicionaPorcentagensMemoria(percentualMemLivre, percentualMemOcupada)
     
 # Cria a lista de processos
-processos = pegaProcessos()
+'''processos = pegaProcessos()
 
 sistema = pegaGlobal()
 
-'''calculaPercentualMemoria(sistema)
+calculaPercentualMemoria(sistema)
 
 print(sistema.percentualMemLivre)
 print(sistema.percentualMemOcupada)'''
