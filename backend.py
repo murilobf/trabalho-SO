@@ -8,8 +8,10 @@ from classes import Processo, Sistema, Threads
 #SEÇÃO DE COLEÇÃO DE DADOS
 #========================#
 
+# TODO: da forma como isso está estruturado um novo objeto é criado sempre que a função é chamada, o que não permite a atualização correta dos dados nas
+# threads da main. Precisamos mudar isso
 # Pega os dados globais do sistema
-def pegaGlobal() -> Sistema:
+def pegaGlobal(sistema: Sistema): #-> Sistema:
 
     sistemaRetorno = Sistema()
 
@@ -21,6 +23,7 @@ def pegaGlobal() -> Sistema:
 
     return sistemaRetorno
 
+#Lê meminfo para pegar todos os dados sobre memória do sistema, quais dados são lidos fica a cargo das funções que a chama
 def coletar_dados_memoria_sistema():
     with open("/proc/meminfo") as pastaMem:
         dadosMem = pastaMem.read().strip().split() 
@@ -128,13 +131,3 @@ def calcular_uso_processador(sistema: Sistema):
 
     sistema.adicionaPorcentagensProcessador(percentualProcessadorLivre, percentualProcessadorOcupado    )
     
-    
-# Cria a lista de processos
-'''processos = pegaProcessos()
-
-sistema = pegaGlobal()
-
-calculaPercentualMemoria(sistema)
-
-print(sistema.percentualMemLivre)
-print(sistema.percentualMemOcupada)'''

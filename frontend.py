@@ -44,7 +44,6 @@ class Dashboard(tk.Tk):
 
     def atualizar_grafico(self, sistema: classes.Sistema):
 
-
         if len(self.dados_memoria) >= 30:
             self.dados_memoria.pop(0)
         self.dados_memoria.append(sistema.percentualMemLivre)
