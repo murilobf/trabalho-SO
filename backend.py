@@ -118,7 +118,7 @@ def calculaPercentualMemoria(sistema: Sistema):
     sistema.adicionaPorcentagensMemoria(percentualMemLivre, percentualMemOcupada)
 
 # Calcula uso da cpu por um processo em um intervalo de tempo
-def calcular_uso_processador (sistema: Sistema) -> float:
+def calcular_uso_processador(sistema: Sistema):
     dados_processo = coletar_dados_processador()
     #Aqui pega os dados de tempo    
     soma = float(dados_processo[1]) + float(dados_processo[2]) + float(dados_processo[3])

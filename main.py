@@ -3,18 +3,21 @@ import backend
 import frontend
 import time
 
-#Loop principal do código
-thread = threading.Thread(target=loop_de_coleta, daemon=True)
-thread.start()
-sistema = backend.pegaGlobal()
-
-def loop_de_coleta():
+def loop_de_coleta(sistema: backend.Sistema):
     while True:
-        sistema = backend.pegaGlobal
+        sistema = backend.pegaGlobal()
+        backend.calculaPercentualMemoria(sistema)
 
         # Aguarda 5 segundos antes de atualizar novamente
         time.sleep(5)
 
+#Coleta inicial do sistema para que seja possível usá-lo nas diferentes threads
+sistema = backend.pegaGlobal()
+# Thread de coleta de dados
+thread = threading.Thread(target=loop_de_coleta, args=(sistema,), daemon=True)
+thread.start()
+
+# Thread de interface
 if __name__ == "__main__":
     app = frontend.Dashboard(sistema)
     app.mainloop()
