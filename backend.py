@@ -1,7 +1,6 @@
 '''https://stackoverflow.com/questions/39066998/what-are-the-meaning-of-values-at-proc-pid-stat'''
 
 import os
-import time
 from classes import Processo, Sistema, Threads
 
 #========================#
@@ -11,7 +10,7 @@ from classes import Processo, Sistema, Threads
 # TODO: da forma como isso está estruturado um novo objeto é criado sempre que a função é chamada, o que não permite a atualização correta dos dados nas
 # threads da main. Precisamos mudar isso
 # Pega os dados globais do sistema
-def pegaGlobal(sistema: Sistema): #-> Sistema:
+def pegaSistema() -> Sistema:
 
     sistemaRetorno = Sistema()
 

@@ -17,7 +17,6 @@ class Dashboard(tk.Tk):
         ttk.Label(frame_processos, text="Processos em Execução", font=("Helvetica", 12)).pack(pady=5)
         self.lista_processos = tk.Listbox(frame_processos, width=40)
         self.lista_processos.pack(fill=tk.BOTH, expand=True)
-        self.processos = []
         self.atualizar_processos(sistema)
 
         # FRAME: Gráfico
@@ -39,18 +38,33 @@ class Dashboard(tk.Tk):
 
     def atualizar_processos(self, sistema: classes.Sistema):
         self.lista_processos.delete(0, tk.END)
+
+        #Pega os processos da lista de processos do sistema
         self.processos = sistema.retornaProcessos()
-        self.after(5000, lambda: self.atualizar_processos(sistema))  # Atualiza lista a cada 5 segundos
+
+        #Transforma os dados da lista em uma string para ser printada para cada processo na lista
+        for processo in self.processos:
+            self.lista_processos.insert(tk.END, processo)
+
+        self.after(1000, lambda: self.atualizar_processos(sistema))  # Atualiza lista a cada 5 segundos
 
     def atualizar_grafico(self, sistema: classes.Sistema):
 
+        #O gráfico é uma lista que guarda os dados de percentual de memória livre a cada segundo
+
+        #Isso remove o último elemento dessa lista quando ultrapassa de 30 (ou seja, guarda os dados dos últimos 30s)
         if len(self.dados_memoria) >= 30:
             self.dados_memoria.pop(0)
+
+        #Isso adiciona mais um elemento na lista
         self.dados_memoria.append(sistema.percentualMemLivre)
 
+        #O bloco abaixo desenha o gráfico
         self.linha.set_data(range(len(self.dados_memoria)), self.dados_memoria)
         self.ax.set_xlim(0, max(30, len(self.dados_memoria)))
         self.canvas.draw()
-        self.after(5000, lambda: self.atualizar_grafico(sistema))  # Atualiza o gráfico a cada 1 segundo
+
+        #Chama a função de novo após 1 segundo
+        self.after(1000, lambda: self.atualizar_grafico(sistema))  
 
 

@@ -15,6 +15,20 @@ class Sistema:
         #Vetor que guarda todos os processos atualmente no sistema
         self.processos = []
 
+    #Essa aspas em Sistema serve para poder usar um objeto do mesmo tipo da classe em que a função está presente
+    def atualizaDados(self, sistema: "Sistema"):
+        #Dados do processador
+        self.percentualProcessadorLivre = sistema.percentualProcessadorLivre
+        self.percentualProcessadorOcupado = sistema.percentualProcessadorOcupado
+        #Dados de memória
+        self.memLivre = sistema.memLivre
+        self.memFisica = sistema.memFisica
+        self.memVirtual = sistema.memVirtual
+        self.percentualMemLivre = sistema.percentualMemLivre
+        self.percentualMemOcupada = sistema.percentualMemOcupada
+        #Vetor que guarda todos os processos atualmente no sistema
+        self.processos = sistema.processos
+
     def adicionaDadosMemoria(self, memFisica: int, memLivre: int, memVirtual: int):
         self.memFisica = memFisica
         self.memLivre = memLivre
