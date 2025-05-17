@@ -14,6 +14,7 @@ class Sistema:
         self.percentualMemOcupada = 0
         #Vetor que guarda todos os processos atualmente no sistema
         self.processos = []
+        self.cont = 0
 
     #Essa aspas em Sistema serve para poder usar um objeto do mesmo tipo da classe em que a função está presente
     def atualizaDados(self, sistema: "Sistema"):
@@ -48,6 +49,9 @@ class Sistema:
 
     def retornaProcessos(self):
         return self.processos
+    
+    def getMemOcupada(self):
+        return self.percentualMemOcupada
 
 
 #Classe que armazena os dados de um processo

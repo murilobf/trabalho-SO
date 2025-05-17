@@ -3,12 +3,17 @@ import tkinter as tk
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+import threading
+
+lock = threading.Lock()
 
 class Dashboard(tk.Tk):
-    def __init__(self, sistema: classes.Sistema):
+    def __init__(self, sistema: classes.Sistema, barreira: threading.Barrier):
         super().__init__()
         self.title("Gerenciador de Tarefas 0.5v")
         self.geometry("900x500")
+        self.sistema = sistema
+        self.barreira = barreira
 
         # FRAME: Lista de processos
         frame_processos = ttk.Frame(self)
@@ -17,54 +22,69 @@ class Dashboard(tk.Tk):
         ttk.Label(frame_processos, text="Processos em Execução", font=("Helvetica", 12)).pack(pady=5)
         self.lista_processos = tk.Listbox(frame_processos, width=40)
         self.lista_processos.pack(fill=tk.BOTH, expand=True)
-        self.atualizar_processos(sistema)
 
-        # FRAME: Gráfico
-        frame_grafico = ttk.Frame(self)
-        frame_grafico.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # FRAME: Gráficos
+        frame_grafico_memoria = ttk.Frame(self)
+        frame_grafico_memoria.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+        frame_grafico_cpu = ttk.Frame(self)
+        frame_grafico_cpu.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         self.dados_memoria = []
-        self.fig, self.ax = plt.subplots(figsize=(5, 3))
-        self.ax.set_title("Uso de Memória (%)")
-        self.ax.set_ylim(0, 100)
-        self.ax.set_xlim(0, 30)
-        self.ax.set_ylabel("Memória usada (%)")
-        self.linha, = self.ax.plot([], [], 'b-')
+        self.dados_cpu = []
 
-        self.canvas = FigureCanvasTkAgg(self.fig, master=frame_grafico)
-        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        # Gráfico de uso de memória
+        self.fig_mem, self.ax_mem = plt.subplots(figsize=(5, 3))
+        self.ax_mem.set_title("Uso de Memória (%)")
+        self.ax_mem.set_ylim(0, 100)
+        self.ax_mem.set_xlim(0, 30)
+        self.ax_mem.set_ylabel("Memória usada (%)")
+        self.linha_mem, = self.ax_mem.plot([], [], 'b-')
+        self.canvas_mem = FigureCanvasTkAgg(self.fig_mem, master=frame_grafico_memoria)
+        self.canvas_mem.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-        self.atualizar_grafico(sistema)
+        # Gráfico de uso de CPU
+        self.fig_cpu, self.ax_cpu = plt.subplots(figsize=(5, 3))
+        self.ax_cpu.set_title("Uso de CPU (%)")
+        self.ax_cpu.set_ylim(0, 100)
+        self.ax_cpu.set_xlim(0, 30)
+        self.ax_cpu.set_ylabel("CPU usada (%)")
+        self.linha_cpu, = self.ax_cpu.plot([], [], 'r-')
+        self.canvas_cpu = FigureCanvasTkAgg(self.fig_cpu, master=frame_grafico_cpu)
+        self.canvas_cpu.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-    def atualizar_processos(self, sistema: classes.Sistema):
+        self.atualiza_interface_periodicamente()
+
+    def atualiza_interface_periodicamente(self):
+        with lock:
+            self.atualizar_processos()
+            self.atualizar_grafico()
+
+        # Após atualização, libera a barreira
+        try:
+            self.barreira.wait()
+        except threading.BrokenBarrierError:
+            pass
+
+        self.after(1000, self.atualiza_interface_periodicamente)
+
+    def atualizar_processos(self):
         self.lista_processos.delete(0, tk.END)
-
-        #Pega os processos da lista de processos do sistema
-        self.processos = sistema.retornaProcessos()
-
-        #Transforma os dados da lista em uma string para ser printada para cada processo na lista
-        for processo in self.processos:
+        for processo in self.sistema.retornaProcessos():
             self.lista_processos.insert(tk.END, processo)
 
-        self.after(1000, lambda: self.atualizar_processos(sistema))  # Atualiza lista a cada 5 segundos
-
-    def atualizar_grafico(self, sistema: classes.Sistema):
-
-        #O gráfico é uma lista que guarda os dados de percentual de memória livre a cada segundo
-
-        #Isso remove o último elemento dessa lista quando ultrapassa de 30 (ou seja, guarda os dados dos últimos 30s)
+    def atualizar_grafico(self):
         if len(self.dados_memoria) >= 30:
             self.dados_memoria.pop(0)
+        if len(self.dados_cpu) >= 30:
+            self.dados_cpu.pop(0)
 
-        #Isso adiciona mais um elemento na lista
-        self.dados_memoria.append(sistema.percentualMemLivre)
+        self.dados_memoria.append(self.sistema.percentualMemOcupada)
+        self.dados_cpu.append(self.sistema.percentualProcessadorOcupado)
 
-        #O bloco abaixo desenha o gráfico
-        self.linha.set_data(range(len(self.dados_memoria)), self.dados_memoria)
-        self.ax.set_xlim(0, max(30, len(self.dados_memoria)))
-        self.canvas.draw()
+        self.linha_mem.set_data(range(len(self.dados_memoria)), self.dados_memoria)
+        self.ax_mem.set_xlim(0, max(30, len(self.dados_memoria)))
+        self.canvas_mem.draw()
 
-        #Chama a função de novo após 1 segundo
-        self.after(1000, lambda: self.atualizar_grafico(sistema))  
-
-
+        self.linha_cpu.set_data(range(len(self.dados_cpu)), self.dados_cpu)
+        self.ax_cpu.set_xlim(0, max(30, len(self.dados_cpu)))
+        self.canvas_cpu.draw()

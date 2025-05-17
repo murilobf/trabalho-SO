@@ -58,24 +58,30 @@ def pegaProcessos() -> list[Processo]:
             #Processo inicialmente vazio, será preenchido ao final da condicional
             processo = Processo()
 
-            #Coleta todos os dados do processo
-            dados_processo = coletar_infos_processo(pid.name)
-            
-            #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
-            usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
+            #Try catch pra alguns casos de processos que nascem e morrem muito rapidamente e geram erros ao tentar acessá-los
+            try:
+                #Coleta todos os dados do processo
+                dados_processo = coletar_infos_processo(pid.name)
+                
+                #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
+                usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
 
-            processo.adicionaDadosBasicos(pid.name, dados_processo[1], usuario) #Adiciona id, nome do processo e o id do usuário
-            
-            #Threads
-            threads = (coletar_dados_threads(pid.name))
-            processo.adicionaThreads(threads)
+                processo.adicionaDadosBasicos(pid.name, dados_processo[1], usuario) #Adiciona id, nome do processo e o id do usuário
+                
+                #Threads
+                threads = (coletar_dados_threads(pid.name))
+                processo.adicionaThreads(threads)
 
-            # Coleta e guarda a memória do processo
-            dadosMem = coletar_dados_memoria(pid.name)
-            processo.adicionaDadosMemoria(dadosMem[0],dadosMem[3],dadosMem[5]) #memTotal em kb, memTotal em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
+                # Coleta e guarda a memória do processo
+                dadosMem = coletar_dados_memoria(pid.name)
+                processo.adicionaDadosMemoria(dadosMem[0],dadosMem[3],dadosMem[5]) #memTotal em kb, memTotal em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
 
-            # Adiciona o processo na lista de processos
-            processosRetorno.append(processo)
+                # Adiciona o processo na lista de processos
+                processosRetorno.append(processo)
+
+
+            except FileNotFoundError:
+                continue
 
     return processosRetorno
 
@@ -125,8 +131,8 @@ def calcular_uso_processador(sistema: Sistema):
     #Aqui pega os dados de tempo    
     soma = float(dados_processo[1]) + float(dados_processo[2]) + float(dados_processo[3])
     
-    percentualProcessadorLivre = round(100 * (soma / (float(dados_processo[4]) + soma)), 10)
-    percentualProcessadorOcupado = 100 - percentualProcessadorLivre
+    percentualProcessadorOcupado = round(100 * (soma / (float(dados_processo[4]) + soma)), 10)
+    percentualProcessadorLivre = 100 - percentualProcessadorOcupado
 
-    sistema.adicionaPorcentagensProcessador(percentualProcessadorLivre, percentualProcessadorOcupado    )
+    sistema.adicionaPorcentagensProcessador(percentualProcessadorLivre, percentualProcessadorOcupado) 
     
