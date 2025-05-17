@@ -20,7 +20,7 @@ class Dashboard(tk.Tk):
         frame_processos.pack(side=tk.LEFT, fill=tk.BOTH, expand=False, padx=10, pady=10)
 
         ttk.Label(frame_processos, text="Processos em Execução", font=("Helvetica", 12)).pack(pady=5)
-        self.lista_processos = tk.Listbox(frame_processos, width=40)
+        self.lista_processos = tk.Listbox(frame_processos, width=60)
         self.lista_processos.pack(fill=tk.BOTH, expand=True)
 
         # FRAME: Gráficos
@@ -52,9 +52,9 @@ class Dashboard(tk.Tk):
         self.canvas_cpu = FigureCanvasTkAgg(self.fig_cpu, master=frame_grafico_cpu)
         self.canvas_cpu.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-        self.atualiza_interface_periodicamente()
+        self.atualiza_interface()
 
-    def atualiza_interface_periodicamente(self):
+    def atualiza_interface(self):
         with lock:
             self.atualizar_processos()
             self.atualizar_grafico()
@@ -65,12 +65,12 @@ class Dashboard(tk.Tk):
         except threading.BrokenBarrierError:
             pass
 
-        self.after(1000, self.atualiza_interface_periodicamente)
+        self.after(1000, self.atualiza_interface)
 
     def atualizar_processos(self):
         self.lista_processos.delete(0, tk.END)
         for processo in self.sistema.retornaProcessos():
-            self.lista_processos.insert(tk.END, processo)
+            self.lista_processos.insert(tk.END, processo.retornaStringDados())
 
     def atualizar_grafico(self):
         if len(self.dados_memoria) >= 30:

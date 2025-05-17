@@ -102,7 +102,7 @@ class Processo:
         print(f"Quantidade de páginas usadas por data, heap e stack: {self.qtde_paginas_outros}")
 
     def retornaStringDados(self):
-        return "{self.pid} - {self.nome} - {self.usuario} - {self.mem_alocada}"
+        return f"ID: {self.pid} Processo: {self.nome} Usuário: {self.usuario}"
 
 class Threads:
     def __init__(self, pid: int, tid: int, qnt_thread: int, nome_thread: str):
