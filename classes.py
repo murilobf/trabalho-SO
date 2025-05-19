@@ -16,38 +16,24 @@ class Sistema:
         self.processos = []
         self.cont = 0
 
-    #Essa aspas em Sistema serve para poder usar um objeto do mesmo tipo da classe em que a função está presente
-    def atualizaDados(self, sistema: "Sistema"):
-        #Dados do processador
-        self.percentualProcessadorLivre = sistema.percentualProcessadorLivre
-        self.percentualProcessadorOcupado = sistema.percentualProcessadorOcupado
-        #Dados de memória
-        self.memLivre = sistema.memLivre
-        self.memFisica = sistema.memFisica
-        self.memVirtual = sistema.memVirtual
-        self.percentualMemLivre = sistema.percentualMemLivre
-        self.percentualMemOcupada = sistema.percentualMemOcupada
-        #Vetor que guarda todos os processos atualmente no sistema
-        self.processos = sistema.processos
-
-    def adicionaDadosMemoria(self, memFisica: int, memLivre: int, memVirtual: int):
+    def adiciona_dados_memoria(self, memFisica: int, memLivre: int, memVirtual: int):
         self.memFisica = memFisica
         self.memLivre = memLivre
         self.memVirtual = memVirtual
 
-    def adicionaPorcentagensMemoria(self, percentualMemLivre: float, percentualMemOcupada: float):
+    def adiciona_porcentagens_memoria(self, percentualMemLivre: float, percentualMemOcupada: float):
         self.percentualMemLivre = percentualMemLivre
         self.percentualMemOcupada = percentualMemOcupada
 
-    def adicionaPorcentagensProcessador(self, percentualProcessadorLivre: float, percentualProcessadorOcupado: float):
+    def adiciona_porcentagens_processador(self, percentualProcessadorLivre: float, percentualProcessadorOcupado: float):
         self.percentualProcessadorLivre = percentualProcessadorLivre
         self.percentualProcessadorOcupado = percentualProcessadorOcupado
         
 
-    def adicionaProcessos(self, processos):
+    def adiciona_processos(self, processos):
         self.processos = processos
 
-    def retornaProcessos(self):
+    def retorna_processos(self):
         return self.processos
     
     def getMemOcupada(self):
@@ -66,47 +52,36 @@ class Processo:
         self.usuario = ""
         #Dados relativos ao requisito 2 do trabalho (memória)
         self.mem_alocada = 0
-        self.qtde_paginas_total = 0
-        self.qtde_paginas_codigo = 0
-        self.qtde_paginas_outros = 0
+        self.qtdePaginasTotal = 0
+        self.qtdePaginasCodigo = 0
+        self.qtdePaginasOutros = 0
         self.threads = []
 
-    def calculaPaginaPkB(self, dadoPag):
+    def calcula_pagina_kb(self, dadoPag):
         auxMemTotalKb = (int(dadoPag)*tamPaginakB) # Multiplicação para tornar o dado de quantidade de páginas usadas no total para tamanho em KB
 
         return auxMemTotalKb
 
-    def adicionaDadosBasicos(self, pid: int, nome: str, usuario: str):
+    def adiciona_dados_basicos(self, pid: int, nome: str, usuario: str):
         self.pid = pid
         self.nome = nome
         self.usuario = usuario
     
-    def adicionaThreads(self, threads: list):
+    def adiciona_threads(self, threads: list):
         self.threads = threads
 
-    def adicionaDadosMemoria(self, qtde_paginas_total: int, qtde_paginas_codigo: int, qtde_paginas_outros: int):
-        self.mem_alocada = self.calculaPaginaPkB(qtde_paginas_total)
-        self.qtde_paginas_total = qtde_paginas_total
-        self.qtde_paginas_codigo = qtde_paginas_codigo
-        self.qtde_paginas_outros = qtde_paginas_outros # Soma da quantidade de páginas usadas por data e por stack
-    
-    def printDados(self):
-        print("\nDADOS BÁSICOS:")
-        print(f"Id: {self.pid}")
-        print(f"Nome: {self.nome}")
-        print(f"Usuario: {self.usuario}")
-        print("DADOS DE MEMÓRIA:")
-        print(f"Memória alocada: {self.mem_alocada}kB")
-        print(f"Quantidade total de páginas usadas: {self.qtde_paginas_total}")
-        print(f"Quantidade de páginas de código: {self.qtde_paginas_codigo}")
-        print(f"Quantidade de páginas usadas por data, heap e stack: {self.qtde_paginas_outros}")
+    def adiciona_dados_memoria(self, qtdePaginasTotal: int, qtdePaginasCodigo: int, qtdePaginasOutros: int):
+        self.mem_alocada = self.calcula_pagina_kb(qtdePaginasTotal)
+        self.qtdePaginasTotal = qtdePaginasTotal
+        self.qtdePaginasCodigo = qtdePaginasCodigo
+        self.qtdePaginasOutros = qtdePaginasOutros # Soma da quantidade de páginas usadas por data e por stack
 
-    def retornaStringDados(self):
+    def retorna_string_dados(self):
         return f"ID: {self.pid} Processo: {self.nome} Usuário: {self.usuario}"
 
 class Threads:
-    def __init__(self, pid: int, tid: int, qnt_thread: int, nome_thread: str):
+    def __init__(self, pid: int, tid: int, qntThread: int, nomeThread: str):
         self.pid = pid
         self.tid = tid
-        self.qnt_thread = qnt_thread
-        self.nome_thread = nome_thread
+        self.qntThread = qntThread
+        self.nomeThread = nomeThread

@@ -8,36 +8,36 @@ from queue import Queue
 #Se comunicam no sentido coleta > tratamento > interface
 
 #Fila coleta-tratamento
-fila_ct = Queue()
+filaCT = Queue()
 #Fila tratamento-interface
-fila_ti = Queue()
+filaTI = Queue()
 
 def loop_de_coleta():
     while True:
-        
-        auxSistema = backend.pegaSistema()
-        fila_ct.put(auxSistema)
+
+        auxSistema = backend.pega_sistema()
+        filaCT.put(auxSistema)
         
         time.sleep(1)
 
 def loop_de_tratamento():
     while True:
         
-        auxSistema = fila_ct.get()
-        backend.calculaPercentualMemoria(auxSistema)
-        backend.calcular_uso_processador(auxSistema)
-        fila_ti.put(auxSistema)
+        auxSistema = filaCT.get()
+        backend.calcula_uso_memoria(auxSistema)
+        backend.calcula_uso_processador(auxSistema)
+        filaTI.put(auxSistema)
 
         time.sleep(1)
 
-if __name__ == "__main__":
-    sistema = backend.pegaSistema()
+#=========================#
+#PARTE PRINCIPAL DO CÓDIGO#
+#=========================#
+threadColeta = threading.Thread(target=loop_de_coleta, daemon=True)
+threadTratamento = threading.Thread(target=loop_de_tratamento, daemon=True)
 
-    threadColeta = threading.Thread(target=loop_de_coleta, daemon=True)
-    threadTratamento = threading.Thread(target=loop_de_tratamento, daemon=True)
+threadColeta.start()
+threadTratamento.start()
 
-    threadColeta.start()
-    threadTratamento.start()
-
-    app = frontend.Dashboard(fila_ti)
-    app.mainloop()
+app = frontend.Dashboard(filaTI)
+app.mainloop()
