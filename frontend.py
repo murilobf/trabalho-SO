@@ -4,16 +4,24 @@ from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import threading
+from queue import Queue
 
 lock = threading.Lock()
 
 class Dashboard(tk.Tk):
-    def __init__(self, sistema: classes.Sistema, barreira: threading.Barrier):
+    def __init__(self, fila_ti: Queue):
         super().__init__()
         self.title("Gerenciador de Tarefas 0.5v")
         self.geometry("900x500")
-        self.sistema = sistema
-        self.barreira = barreira
+        #self.barreira = barreira
+
+        # FRAME: Dados globais do sistema
+        frame_sistema = ttk.Frame(self)
+        frame_sistema.pack(side=tk.TOP, fill=tk.X, expand=False, padx=5, pady=10)
+        '''FALTA TERMINAR'''
+        ttk.Label(frame_sistema, text="Dados do Sistema", font=("Helvetica, 12")).pack(pady=5)
+        self.dados_sistema = tk.Label(frame_sistema, height=10)
+        self.dados_sistema.pack(fill=tk.BOTH, expand=True)
 
         # FRAME: Lista de processos
         frame_processos = ttk.Frame(self)
@@ -52,34 +60,37 @@ class Dashboard(tk.Tk):
         self.canvas_cpu = FigureCanvasTkAgg(self.fig_cpu, master=frame_grafico_cpu)
         self.canvas_cpu.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-        self.atualiza_interface()
+        self.atualiza_interface(fila_ti)
 
-    def atualiza_interface(self):
-        with lock:
-            self.atualizar_processos()
-            self.atualizar_grafico()
+    def atualiza_interface(self, fila_ti: Queue):
+        
+        auxSistema = fila_ti.get()
+        self.atualizar_processos(auxSistema)
+        self.atualizar_grafico(auxSistema)
 
         # Após atualização, libera a barreira
-        try:
+        '''try:
             self.barreira.wait()
         except threading.BrokenBarrierError:
-            pass
+            pass'''
+        self.after(1000, self.atualiza_interface, fila_ti)
 
-        self.after(1000, self.atualiza_interface)
+    def atualizar_sistemas(self):
+        self.info_sistema.delete(0, tk.END)
 
-    def atualizar_processos(self):
+    def atualizar_processos(self, sistema: classes.Sistema):
         self.lista_processos.delete(0, tk.END)
-        for processo in self.sistema.retornaProcessos():
+        for processo in sistema.retornaProcessos():
             self.lista_processos.insert(tk.END, processo.retornaStringDados())
 
-    def atualizar_grafico(self):
+    def atualizar_grafico(self, sistema: classes.Sistema):
         if len(self.dados_memoria) >= 30:
             self.dados_memoria.pop(0)
         if len(self.dados_cpu) >= 30:
             self.dados_cpu.pop(0)
 
-        self.dados_memoria.append(self.sistema.percentualMemOcupada)
-        self.dados_cpu.append(self.sistema.percentualProcessadorOcupado)
+        self.dados_memoria.append(sistema.percentualMemOcupada)
+        self.dados_cpu.append(sistema.percentualProcessadorOcupado)
 
         self.linha_mem.set_data(range(len(self.dados_memoria)), self.dados_memoria)
         self.ax_mem.set_xlim(0, max(30, len(self.dados_memoria)))

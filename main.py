@@ -2,45 +2,42 @@ import threading
 import backend
 import frontend
 import time
+from queue import Queue
 
-lock = threading.Lock()
-barreira = threading.Barrier(3)
+#Cria um canal (uma fila) bloqueante entre as threads para evitar problemas gerados por um eventual conflito (race condition) entre elas
+#Se comunicam no sentido coleta > tratamento > interface
 
-def loop_de_coleta(sistema: backend.Sistema):
+#Fila coleta-tratamento
+fila_ct = Queue()
+#Fila tratamento-interface
+fila_ti = Queue()
+
+def loop_de_coleta():
     while True:
+        
         auxSistema = backend.pegaSistema()
-        with lock:
-            sistema.atualizaDados(auxSistema)
-            sistema.cont += 1  # Para debug
-        try:
-            barreira.wait()
-        except threading.BrokenBarrierError:
-            pass
-
-        backend.calcular_uso_processador(sistema)
-        print(sistema.percentualProcessadorOcupado)
+        fila_ct.put(auxSistema)
+        
         time.sleep(1)
 
-def loop_de_tratamento(sistema: backend.Sistema):
+def loop_de_tratamento():
     while True:
-        with lock:
-            backend.calculaPercentualMemoria(sistema)
-            backend.calcular_uso_processador(sistema)
-        try:
-            barreira.wait()
-        except threading.BrokenBarrierError:
-            pass
+        
+        auxSistema = fila_ct.get()
+        backend.calculaPercentualMemoria(auxSistema)
+        backend.calcular_uso_processador(auxSistema)
+        fila_ti.put(auxSistema)
 
         time.sleep(1)
 
 if __name__ == "__main__":
     sistema = backend.pegaSistema()
 
-    threadColeta = threading.Thread(target=loop_de_coleta, args=(sistema,), daemon=True)
-    threadTratamento = threading.Thread(target=loop_de_tratamento, args=(sistema,), daemon=True)
+    threadColeta = threading.Thread(target=loop_de_coleta, daemon=True)
+    threadTratamento = threading.Thread(target=loop_de_tratamento, daemon=True)
 
     threadColeta.start()
     threadTratamento.start()
 
-    app = frontend.Dashboard(sistema, barreira)
+    app = frontend.Dashboard(fila_ti)
     app.mainloop()
