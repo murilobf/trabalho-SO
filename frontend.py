@@ -13,12 +13,25 @@ class Dashboard(tk.Tk):
         #self.barreira = barreira
 
         # FRAME: Dados globais do sistema
+        # Seria a "div" externa, tem o título 
         frameSistema = ttk.Frame(self)
-        frameSistema.pack(side=tk.TOP, fill=tk.X, expand=False, padx=5, pady=10)
+        frameSistema.pack(side=tk.TOP, fill=tk.X, expand=False, padx=5, pady=5)
         '''FALTA TERMINAR'''
         ttk.Label(frameSistema, text="Dados do Sistema", font=("Helvetica, 12")).pack(pady=5)
-        self.dadosSistema = tk.Label(frameSistema, height=10)
-        self.dadosSistema.pack(fill=tk.BOTH, expand=True)
+
+        # Guarda os frames de dados
+        frameDadosSistema = ttk.Frame(frameSistema)
+        frameDadosSistema.pack(fill=tk.X)
+
+        # Os frames abaixos são os dados propriamente ditos
+        self.dadoSistemaCpuUsado = tk.Label(frameDadosSistema, text="")
+        self.dadoSistemaCpuUsado.pack(side=tk.LEFT,padx=10)
+        self.dadoSistemaCpuLivre = tk.Label(frameDadosSistema, text="")
+        self.dadoSistemaCpuLivre.pack(side=tk.LEFT, padx=10)
+        self.dadoSistemaMemUsada = tk.Label(frameDadosSistema, text="")
+        self.dadoSistemaMemUsada.pack(side=tk.LEFT, padx=10)
+        self.dadoSistemaMemLivre = tk.Label(frameDadosSistema, text="")
+        self.dadoSistemaMemLivre.pack(side=tk.LEFT, padx=10)
 
         # FRAME: Lista de processos
         frameProcessos = ttk.Frame(self)
@@ -64,11 +77,16 @@ class Dashboard(tk.Tk):
         auxSistema = filaTI.get()
         self.atualiza_processos(auxSistema)
         self.atualiza_grafico(auxSistema)
+        self.atualiza_sistema(auxSistema)
 
         self.after(1000, self.atualiza_interface, filaTI)
 
-    def atualiza_sistemas(self):
-        self.infoSistema.delete(0, tk.END)
+    def atualiza_sistema(self, sistema: classes.Sistema):
+        
+        self.dadoSistemaCpuUsado.config(text=f"CPU usado: {sistema.percentualProcessadorOcupado:.2f}%")
+        self.dadoSistemaCpuLivre.config(text=f"CPU livre: {sistema.percentualProcessadorLivre:.2f}%")
+        self.dadoSistemaMemUsada.config(text=f"RAM usada: {sistema.percentualMemOcupada:.2f}%")
+        self.dadoSistemaMemLivre.config(text=f"RAM livre: {sistema.percentualMemLivre:.2f}%")
 
     def atualiza_processos(self, sistema: classes.Sistema):
         self.listaProcessos.delete(0, tk.END)

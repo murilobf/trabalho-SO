@@ -4,7 +4,7 @@ import frontend
 import time
 from queue import Queue
 
-#Cria um canal (uma fila) bloqueante entre as threads para evitar problemas gerados por um eventual conflito (race condition) entre elas
+#Cria um canal (uma fila) bloqueante entre as threads para evitar problemas gerados por um eventual conflito (race condition) entre elas. 
 #Se comunicam no sentido coleta > tratamento > interface
 
 #Fila coleta-tratamento
@@ -12,6 +12,9 @@ filaCT = Queue()
 #Fila tratamento-interface
 filaTI = Queue()
 
+#Funções que serão chamadas nas threads
+
+#Responsável pela coleta de dados
 def loop_de_coleta():
     while True:
 
@@ -20,6 +23,7 @@ def loop_de_coleta():
         
         time.sleep(1)
 
+#Responsável pelo "tratamento" dos dados (cálculos e quaisquer outras possíveis necessidades futuras)
 def loop_de_tratamento():
     while True:
         
@@ -39,5 +43,6 @@ threadTratamento = threading.Thread(target=loop_de_tratamento, daemon=True)
 threadColeta.start()
 threadTratamento.start()
 
+#Interface
 app = frontend.Dashboard(filaTI)
 app.mainloop()
