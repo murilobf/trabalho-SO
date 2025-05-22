@@ -1,6 +1,7 @@
 '''https://stackoverflow.com/questions/39066998/what-are-the-meaning-of-values-at-proc-pid-stat'''
 
 import os
+import time
 from classes import Processo, Sistema, Threads
 
 #========================#
@@ -13,6 +14,9 @@ from classes import Processo, Sistema, Threads
 def pega_sistema() -> Sistema:
 
     sistemaRetorno = Sistema()
+
+    dadosProcessador = coleta_dados_processador()
+    sistemaRetorno.adiciona_dados_processador(dadosProcessador)
 
     dadosMem = coleta_dados_memoria_sistema()
     sistemaRetorno.adiciona_dados_memoria(dadosMem[1], dadosMem[4], dadosMem[97]) #Memória física total, Memória física livre e total de memória virtual
@@ -31,11 +35,10 @@ def coleta_dados_memoria_sistema():
     return dadosMem
 
 #Pega os processos do sistema e seus dados  
-def coleta_dados_processador() -> list:
+def coleta_dados_processador():
     with open("/proc/stat") as pastaProc:
-        dadosProc = pastaProc.read().strip().split()
-
-    return dadosProc
+        dadosProcessador = pastaProc.read().strip().split()
+    return dadosProcessador
 
 def coleta_infos_processo(pid) -> list:
     valores_necessarios = [0,1,2,3,10,13,14,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
@@ -127,12 +130,20 @@ def calcula_uso_memoria(sistema: Sistema):
 
 # Calcula uso da cpu por um processo em um intervalo de tempo
 def calcula_uso_processador(sistema: Sistema):
-    dadosProcesso = coleta_dados_processador()
-    #Aqui pega os dados de tempo    
-    soma = float(dadosProcesso[1]) + float(dadosProcesso[2]) + float(dadosProcesso[3])
+    somaPrimeiraAmostragem = float(sistema.dadosProcessador[1]) + float(sistema.dadosProcessador[2]) + float(sistema.dadosProcessador[3])
+    totalPrimeiraAmostragem = somaPrimeiraAmostragem + float(sistema.dadosProcessador[4])
+
+    time.sleep(0.5)  # Espera curta para medir diferença
+
+    auxDadosProcessador = coleta_dados_processador()
+    somaSegundaAmostragem = float(auxDadosProcessador[1]) + float(auxDadosProcessador[2]) + float(auxDadosProcessador[3])
+    totalSegundaAmostragem = somaSegundaAmostragem + float(auxDadosProcessador[4])
     
-    percentualProcessadorOcupado = round(100 * (soma / (float(dadosProcesso[4]) + soma)), 10)
+    diferencaSoma = somaSegundaAmostragem - somaPrimeiraAmostragem
+    diferencaTotal = totalSegundaAmostragem - totalPrimeiraAmostragem
+        
+
+    percentualProcessadorOcupado = round(100 * (diferencaSoma / diferencaTotal), 2)
     percentualProcessadorLivre = 100 - percentualProcessadorOcupado
 
     sistema.adiciona_porcentagens_processador(percentualProcessadorLivre, percentualProcessadorOcupado) 
-    
