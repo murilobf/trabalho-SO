@@ -1,6 +1,6 @@
 '''https://stackoverflow.com/questions/39066998/what-are-the-meaning-of-values-at-proc-pid-stat'''
 
-import os
+import os #Não pode usar os, usar Pathlib
 import time
 from classes import Processo, Sistema, Threads
 
