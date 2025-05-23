@@ -121,7 +121,7 @@ def coleta_dados_threads(pid: int) -> list[Threads]: #vai receber o processo esp
 # Calcula o porcentual de memória usado pelo sistema no momento
 def calcula_uso_memoria(sistema: Sistema):
     memTotal = float(sistema.memFisica)
-    memLivre = float(sistema.memLivre)
+    memLivre = float(sistema.memLivreKB)
 
     percentualMemLivre = round(100*memLivre/memTotal, 2)
     percentualMemOcupada = 100 - percentualMemLivre

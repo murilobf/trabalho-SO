@@ -8,7 +8,8 @@ class Sistema:
         self.percentualProcessadorLivre = 0
         self.percentualProcessadorOcupado = 0
         #Dados de memória
-        self.memLivre = 0
+        self.memLivreKB = 0
+        self.memLivreGB = 0
         self.memFisica = 0
         self.memVirtual = 0
         self.percentualMemLivre = 0
@@ -20,10 +21,14 @@ class Sistema:
     def adiciona_dados_processador(self, dadosProcessador: list):
         self.dadosProcessador = dadosProcessador
 
-    def adiciona_dados_memoria(self, memFisica: int, memLivre: int, memVirtual: int):
+    def adiciona_dados_memoria(self, memFisica: int, memLivreKB: int, memVirtual: int):
         self.memFisica = memFisica
-        self.memLivre = memLivre
-        self.memVirtual = memVirtual
+        self.memLivreKB = memLivreKB
+        #Converte a quantidade de KB para GB ao dividí-la por 1048576 (1024*1024)
+        self.memLivreGB = round((int(memLivreKB)/1048576),2)
+        
+
+         
 
     def adiciona_porcentagens_memoria(self, percentualMemLivre: float, percentualMemOcupada: float):
         self.percentualMemLivre = percentualMemLivre
