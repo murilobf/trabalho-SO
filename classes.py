@@ -4,6 +4,7 @@ tamPaginakB = 4
 class Sistema:
     def __init__(self):
         #Dados do processador
+        self.dadosProcessador = []
         self.percentualProcessadorLivre = 0
         self.percentualProcessadorOcupado = 0
         #Dados de memória
@@ -15,6 +16,9 @@ class Sistema:
         #Vetor que guarda todos os processos atualmente no sistema
         self.processos = []
         self.cont = 0
+
+    def adiciona_dados_processador(self, dadosProcessador: list):
+        self.dadosProcessador = dadosProcessador
 
     def adiciona_dados_memoria(self, memFisica: int, memLivre: int, memVirtual: int):
         self.memFisica = memFisica
@@ -29,7 +33,6 @@ class Sistema:
         self.percentualProcessadorLivre = percentualProcessadorLivre
         self.percentualProcessadorOcupado = percentualProcessadorOcupado
         
-
     def adiciona_processos(self, processos):
         self.processos = processos
 
@@ -85,3 +88,4 @@ class Threads:
         self.tid = tid
         self.qntThread = qntThread
         self.nomeThread = nomeThread
+

@@ -32,8 +32,6 @@ def loop_de_tratamento():
         backend.calcula_uso_processador(auxSistema)
         filaTI.put(auxSistema)
 
-        time.sleep(1)
-
 #=========================#
 #PARTE PRINCIPAL DO CÓDIGO#
 #=========================#

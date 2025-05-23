@@ -1,6 +1,7 @@
 '''https://stackoverflow.com/questions/39066998/what-are-the-meaning-of-values-at-proc-pid-stat'''
 
-import os
+from pathlib import Path
+import time
 from classes import Processo, Sistema, Threads
 
 #========================#
@@ -13,6 +14,9 @@ from classes import Processo, Sistema, Threads
 def pega_sistema() -> Sistema:
 
     sistemaRetorno = Sistema()
+
+    dadosProcessador = coleta_dados_processador()
+    sistemaRetorno.adiciona_dados_processador(dadosProcessador)
 
     dadosMem = coleta_dados_memoria_sistema()
     sistemaRetorno.adiciona_dados_memoria(dadosMem[1], dadosMem[4], dadosMem[97]) #Memória física total, Memória física livre e total de memória virtual
@@ -31,11 +35,10 @@ def coleta_dados_memoria_sistema():
     return dadosMem
 
 #Pega os processos do sistema e seus dados  
-def coleta_dados_processador() -> list:
+def coleta_dados_processador():
     with open("/proc/stat") as pastaProc:
-        dadosProc = pastaProc.read().strip().split()
-
-    return dadosProc
+        dadosProcessador = pastaProc.read().strip().split()
+    return dadosProcessador
 
 def coleta_infos_processo(pid) -> list:
     valores_necessarios = [0,1,2,3,10,13,14,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
@@ -50,9 +53,9 @@ def coleta_infos_processo(pid) -> list:
 #Pega os processos do sistema e seus dados
 def pega_processos() -> list[Processo]:
     processosRetorno = []
+    diretorio = Path("/proc")
 
-    for pid in os.scandir("/proc/"):
-        
+    for pid in diretorio.iterdir():
         #Processos
         if pid.name.isdigit(): #Verifica se os nomes dos processos são números
             #Processo inicialmente vazio, será preenchido ao final da condicional
@@ -64,7 +67,7 @@ def pega_processos() -> list[Processo]:
                 dadosProcesso = coleta_infos_processo(pid.name)
                 
                 #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
-                usuario = os.stat(f"/proc/{pid.name}").st_uid #Coleta o ID do usuário referente ao processo
+                usuario = Path(f"/proc/{pid.name}").stat().st_uid #Coleta o ID do usuário referente ao processo
 
                 processo.adiciona_dados_basicos(pid.name, dadosProcesso[1], usuario) #Adiciona id, nome do processo e o id do usuário
                 
@@ -98,13 +101,13 @@ def coleta_dados_memoria(pid: int):
 
 def coleta_dados_threads(pid: int) -> list[Threads]: #vai receber o processo específico e retorna uma lista com os dados das threads dele
     dadosThreads = []
-    caminho = f"/proc/{pid}/task"
+    diretorio = Path(f"/proc/{pid}/task")
     qntThreads = 0
 
-    for thread in os.scandir(caminho):  #entra na pasta de threads do processo atual
+    for thread in diretorio.iterdir():  #entra na pasta de threads do processo atual
         if thread.name.isdigit(): #nome da thread é número?
             tid = int(thread.name)  # pega os nomes das threads e salva
-            with open(f"{caminho}/{tid}/comm") as t: #abre a theread como um objeto
+            with open(f"{diretorio}/{tid}/comm") as t: #abre a theread como um objeto
                 nomeThread = t.read().strip() # lê e tira os espaço que podem ter na palavra
                 qntThreads += 1
             dadosThreads.append(Threads(pid, tid, qntThreads, nomeThread)) #faz a lista de dados da thread -> Aqui que tá dando o "problema" de printar a lista toda
@@ -127,12 +130,20 @@ def calcula_uso_memoria(sistema: Sistema):
 
 # Calcula uso da cpu por um processo em um intervalo de tempo
 def calcula_uso_processador(sistema: Sistema):
-    dadosProcesso = coleta_dados_processador()
-    #Aqui pega os dados de tempo    
-    soma = float(dadosProcesso[1]) + float(dadosProcesso[2]) + float(dadosProcesso[3])
+    somaPrimeiraAmostragem = float(sistema.dadosProcessador[1]) + float(sistema.dadosProcessador[2]) + float(sistema.dadosProcessador[3])
+    totalPrimeiraAmostragem = somaPrimeiraAmostragem + float(sistema.dadosProcessador[4])
+
+    time.sleep(0.5)  # Espera curta para medir diferença
+
+    auxDadosProcessador = coleta_dados_processador()
+    somaSegundaAmostragem = float(auxDadosProcessador[1]) + float(auxDadosProcessador[2]) + float(auxDadosProcessador[3])
+    totalSegundaAmostragem = somaSegundaAmostragem + float(auxDadosProcessador[4])
     
-    percentualProcessadorOcupado = round(100 * (soma / (float(dadosProcesso[4]) + soma)), 10)
+    diferencaSoma = somaSegundaAmostragem - somaPrimeiraAmostragem
+    diferencaTotal = totalSegundaAmostragem - totalPrimeiraAmostragem
+        
+
+    percentualProcessadorOcupado = round(100 * (diferencaSoma / diferencaTotal), 2)
     percentualProcessadorLivre = 100 - percentualProcessadorOcupado
 
     sistema.adiciona_porcentagens_processador(percentualProcessadorLivre, percentualProcessadorOcupado) 
-    
