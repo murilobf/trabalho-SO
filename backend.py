@@ -3,13 +3,73 @@
 from pathlib import Path
 import time
 from classes import Processo, Sistema, Threads
+import ctypes
+import ctypes.util
+
+# Uma interface pra permitir usar as funções da biblioteca c (o CDLL, junto do ctypes.util.find_library("c") pega a biblioteca de c para isso)
+libc = ctypes.CDLL(ctypes.util.find_library("c"))
 
 #========================#
 #SEÇÃO DE COLEÇÃO DE DADOS
 #========================#
+class Dirent(ctypes.Structure):
+    _fields_ = [
+        ("d_ino", ctypes.c_ulong),
+        ("d_off", ctypes.c_long),
+        ("d_reclen", ctypes.c_ushort),
+        ("d_type", ctypes.c_ubyte),
+        ("d_name", ctypes.c_char * 256)
+    ]
 
-# TODO: da forma como isso está estruturado um novo objeto é criado sempre que a função é chamada, o que não permite a atualização correta dos dados nas
-# threads da main. Precisamos mudar isso
+# Define os tipos de entrada e saída esperados pelas funções
+
+# Pega uma string (ponteiro de char) e retorna o objeto de tipo DIR (definido no ctype) presente dela (por isso é um ponteiro pra void)
+libc.opendir.argtypes = [ctypes.c_char_p]
+libc.opendir.restype = ctypes.c_void_p
+
+# Pega um ponteiro pra void (o DIR) e retorna um ponteiro pra estrutura Dirent (definida acima)
+libc.readdir.argtypes = [ctypes.c_void_p]
+libc.readdir.restype = ctypes.POINTER(Dirent)
+
+# Pega um ponteiro pra void (o DIR) e retorna um inteiro
+libc.closedir.argtypes = [ctypes.c_void_p]
+libc.closedir.restype = ctypes.c_int
+
+def pega_entradas_proc():
+
+    # Ponteiro pro diretório proc
+    pdir = libc.opendir(b"/proc")
+
+    # Lista de retorno
+    pids = []
+
+    try:
+        # Acessa os diretórios enquanto existir um próximo
+        while True:
+            # Pega um ponteiro para o próximo diretório
+            diretorio = libc.readdir(pdir)
+            
+            # Se o atual não for um diretório ele não existe. Quebra o loop
+            if not diretorio:
+                break
+
+            # Pega o nome da pasta, usaremos isso para verificar se o arquivo é ou nãp um processo
+            nome = diretorio.contents.d_name.decode("utf-8")
+
+            # O arquivo é um processo quando seu nome possui um dígito
+            if nome.isdigit():
+                pids.append(nome)
+
+    #Apenas para fim de debug/evitar do código quebrar mesmo quando se encontra algum problema
+    except Exception as e:
+        print(f"Erro ao abrir o proc: {e}")
+    # Ao final, fecha o diretório
+    finally:
+        libc.closedir(pdir)
+
+    return pids
+
+
 # Pega os dados globais do sistema
 def pega_sistema() -> Sistema:
 
@@ -55,36 +115,37 @@ def pega_processos() -> list[Processo]:
     processosRetorno = []
     diretorio = Path("/proc")
 
-    for pid in diretorio.iterdir():
+    pids = pega_entradas_proc()
+
+    for pid in pids:
         #Processos
-        if pid.name.isdigit(): #Verifica se os nomes dos processos são números
-            #Processo inicialmente vazio, será preenchido ao final da condicional
-            processo = Processo()
+        #Processo inicialmente vazio, será preenchido ao final da condicional
+        processo = Processo()
 
-            #Try catch pra alguns casos de processos que nascem e morrem muito rapidamente e geram erros ao tentar acessá-los
-            try:
-                #Coleta todos os dados do processo
-                dadosProcesso = coleta_infos_processo(pid.name)
-                
-                #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
-                usuario = Path(f"/proc/{pid.name}").stat().st_uid #Coleta o ID do usuário referente ao processo
+        #Try catch pra alguns casos de processos que nascem e morrem muito rapidamente e geram erros ao tentar acessá-los
+        try:
+            #Coleta todos os dados do processo
+            dadosProcesso = coleta_infos_processo(pid)
+            
+            #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
+            usuario = Path(f"/proc/{pid}").stat().st_uid #Coleta o ID do usuário referente ao processo
 
-                processo.adiciona_dados_basicos(pid.name, dadosProcesso[1], usuario) #Adiciona id, nome do processo e o id do usuário
-                
-                #Threads
-                threads = (coleta_dados_threads(pid.name))
-                processo.adiciona_threads(threads)
+            processo.adiciona_dados_basicos(pid, dadosProcesso[1], usuario) #Adiciona id, nome do processo e o id do usuário
+            
+            #Threads
+            threads = (coleta_dados_threads(pid))
+            processo.adiciona_threads(threads)
 
-                # Coleta e guarda a memória do processo
-                dadosMem = coleta_dados_memoria(pid.name)
-                processo.adiciona_dados_memoria(dadosMem[0],dadosMem[3],dadosMem[5]) #memTotal em kb, memTotal em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
+            # Coleta e guarda a memória do processo
+            dadosMem = coleta_dados_memoria(pid)
+            processo.adiciona_dados_memoria(dadosMem[0],dadosMem[3],dadosMem[5]) #memTotal em kb, memTotal em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
 
-                # Adiciona o processo na lista de processos
-                processosRetorno.append(processo)
+            # Adiciona o processo na lista de processos
+            processosRetorno.append(processo)
 
 
-            except FileNotFoundError:
-                continue
+        except FileNotFoundError:
+            continue
 
     return processosRetorno
 
@@ -120,7 +181,7 @@ def coleta_dados_threads(pid: int) -> list[Threads]: #vai receber o processo esp
 
 # Calcula o porcentual de memória usado pelo sistema no momento
 def calcula_uso_memoria(sistema: Sistema):
-    memTotal = float(sistema.memFisica)
+    memTotal = float(sistema.memFisicaKB)
     memLivre = float(sistema.memLivreKB)
 
     percentualMemLivre = round(100*memLivre/memTotal, 2)

@@ -6,7 +6,7 @@ from queue import Queue
 
 #Cria um canal (uma fila) bloqueante entre as threads para evitar problemas gerados por um eventual conflito (race condition) entre elas. 
 #Se comunicam no sentido coleta > tratamento > interface
-
+    
 #Fila coleta-tratamento
 filaCT = Queue()
 #Fila tratamento-interface

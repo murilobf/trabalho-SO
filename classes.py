@@ -10,7 +10,8 @@ class Sistema:
         #Dados de memória
         self.memLivreKB = 0
         self.memLivreGB = 0
-        self.memFisica = 0
+        self.memFisicaKB = 0
+        self.memFisicaGB = 0
         self.memVirtual = 0
         self.percentualMemLivre = 0
         self.percentualMemOcupada = 0
@@ -21,11 +22,13 @@ class Sistema:
     def adiciona_dados_processador(self, dadosProcessador: list):
         self.dadosProcessador = dadosProcessador
 
-    def adiciona_dados_memoria(self, memFisica: int, memLivreKB: int, memVirtual: int):
-        self.memFisica = memFisica
+    def adiciona_dados_memoria(self, memFisicaKB: int, memLivreKB: int, memVirtual: int):
+        self.memFisicaKB = memFisicaKB
         self.memLivreKB = memLivreKB
+        self.memVirtual = memVirtual
         #Converte a quantidade de KB para GB ao dividí-la por 1048576 (1024*1024)
         self.memLivreGB = round((int(memLivreKB)/1048576),2)
+        self.memFisicaGB = round((int(memFisicaKB)/1048576),2)
         
 
          

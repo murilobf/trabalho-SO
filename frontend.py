@@ -21,20 +21,22 @@ class Dashboard(tk.Tk):
 
         # Guarda os frames de dados
         frameDadosCpuSistema = ttk.Frame(frameSistema)
-        frameDadosCpuSistema.pack(fill=tk.X)
+        frameDadosCpuSistema.pack(fill=tk.X, pady=5)
         frameDadosMemSistema = ttk.Frame(frameSistema)
         frameDadosMemSistema.pack(fill=tk.X)
 
         # Os frames abaixos são os dados propriamente ditos
         # Esses se referem aos dados de CPU
         self.dadoSistemaCpuUsado = tk.Label(frameDadosCpuSistema, text="")
-        self.dadoSistemaCpuUsado.pack(side=tk.LEFT,padx=10)
+        self.dadoSistemaCpuUsado.pack(side=tk.LEFT, padx=10)
         self.dadoSistemaCpuLivre = tk.Label(frameDadosCpuSistema, text="")
         self.dadoSistemaCpuLivre.pack(side=tk.LEFT, padx=10)
 
         #Esses se referem aos dados de memória
         self.dadoSistemaMemLivre = tk.Label(frameDadosMemSistema, text="")
         self.dadoSistemaMemLivre.pack(side=tk.LEFT, padx=10)
+        self.dadoSistemaMemTotal = tk.Label(frameDadosMemSistema, text="")
+        self.dadoSistemaMemTotal.pack(side=tk.LEFT, padx=10)
         self.dadoSistemaMemUsadaPer = tk.Label(frameDadosMemSistema, text="")
         self.dadoSistemaMemUsadaPer.pack(side=tk.LEFT, padx=10)
         self.dadoSistemaMemLivrePer = tk.Label(frameDadosMemSistema, text="")
@@ -91,6 +93,7 @@ class Dashboard(tk.Tk):
 
     def atualiza_sistema(self, sistema: classes.Sistema):
         
+        self.dadoSistemaMemTotal.config(text=f"Memória RAM total: {sistema.memFisicaKB}KB ou {sistema.memFisicaGB}GB")
         self.dadoSistemaMemLivre.config(text=f"RAM livre: {sistema.memLivreKB}KB ou {sistema.memLivreGB}GB")
         #Porcentagens
         self.dadoSistemaCpuUsado.config(text=f"Porcentagem da CPU usada: {sistema.percentualProcessadorOcupado:.2f}%")
