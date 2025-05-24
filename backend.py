@@ -35,13 +35,15 @@ libc.readdir.restype = ctypes.POINTER(Dirent)
 libc.closedir.argtypes = [ctypes.c_void_p]
 libc.closedir.restype = ctypes.c_int
 
-def pega_entradas_proc():
+def pega_ids(caminho: str):
 
-    # Ponteiro pro diretório proc
-    pdir = libc.opendir(b"/proc")
+    #O opendir não aceita uma variável do tipo str, tem que converter usando a função abaixo para que seja um char*
+    caminhoBytes = caminho.encode('utf-8')
+    # Ponteiro pro diretório específicado (no nosso caso, /proc ou /proc/pid/task, dependendo da função que a chame)
+    pdir = libc.opendir(caminhoBytes)
 
     # Lista de retorno
-    pids = []
+    ids = []
 
     try:
         # Acessa os diretórios enquanto existir um próximo
@@ -58,7 +60,7 @@ def pega_entradas_proc():
 
             # O arquivo é um processo quando seu nome possui um dígito
             if nome.isdigit():
-                pids.append(nome)
+                ids.append(nome)
 
     #Apenas para fim de debug/evitar do código quebrar mesmo quando se encontra algum problema
     except Exception as e:
@@ -67,7 +69,7 @@ def pega_entradas_proc():
     finally:
         libc.closedir(pdir)
 
-    return pids
+    return ids
 
 
 # Pega os dados globais do sistema
@@ -113,9 +115,8 @@ def coleta_infos_processo(pid) -> list:
 #Pega os processos do sistema e seus dados
 def pega_processos() -> list[Processo]:
     processosRetorno = []
-    diretorio = Path("/proc")
 
-    pids = pega_entradas_proc()
+    pids = pega_ids("/proc")
 
     for pid in pids:
         #Processos
@@ -162,16 +163,15 @@ def coleta_dados_memoria(pid: int):
 
 def coleta_dados_threads(pid: int) -> list[Threads]: #vai receber o processo específico e retorna uma lista com os dados das threads dele
     dadosThreads = []
-    diretorio = Path(f"/proc/{pid}/task")
+    tids = pega_ids(f"/proc/{pid}/task")
     qntThreads = 0
 
-    for thread in diretorio.iterdir():  #entra na pasta de threads do processo atual
-        if thread.name.isdigit(): #nome da thread é número?
-            tid = int(thread.name)  # pega os nomes das threads e salva
-            with open(f"{diretorio}/{tid}/comm") as t: #abre a theread como um objeto
-                nomeThread = t.read().strip() # lê e tira os espaço que podem ter na palavra
-                qntThreads += 1
-            dadosThreads.append(Threads(pid, tid, qntThreads, nomeThread)) #faz a lista de dados da thread -> Aqui que tá dando o "problema" de printar a lista toda
+    for tid in tids:  #itera sobre os ids das threads pego pela função pega_ids
+    
+        with open(f"/proc/{pid}/task/{tid}/comm") as t: #abre a theread como um objeto
+            nomeThread = t.read().strip() # lê e tira os espaço que podem ter na palavra
+            qntThreads += 1
+        dadosThreads.append(Threads(pid, tid, qntThreads, nomeThread)) #faz a lista de dados da thread 
 
     return dadosThreads
 
