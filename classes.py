@@ -88,7 +88,7 @@ class Processo:
         self.qtdePaginasOutros = qtdePaginasOutros # Soma da quantidade de páginas usadas por data e por stack
 
     def retorna_string_dados(self):
-        return f"ID: {self.pid} Processo: {self.nome} Usuário: {self.usuario}"
+        return f"ID: {self.pid} | Processo: {self.nome} | Usuário: {self.usuario}"
 
 class Threads:
     def __init__(self, pid: int, tid: int, qntThread: int, nomeThread: str):

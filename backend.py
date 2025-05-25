@@ -9,9 +9,7 @@ import ctypes.util
 # Uma interface pra permitir usar as funções da biblioteca c (o CDLL, junto do ctypes.util.find_library("c") pega a biblioteca de c para isso)
 libc = ctypes.CDLL(ctypes.util.find_library("c"))
 
-#========================#
-#SEÇÃO DE COLEÇÃO DE DADOS
-#========================#
+#Classe usada pra guardar informações sobre arquivos  (usamos diretamente apenas o d_name, mas se tirar o resto para de funcionarkkkk)
 class Dirent(ctypes.Structure):
     _fields_ = [
         ("d_ino", ctypes.c_ulong),
@@ -20,6 +18,19 @@ class Dirent(ctypes.Structure):
         ("d_type", ctypes.c_ubyte),
         ("d_name", ctypes.c_char * 256)
     ]
+
+class Stat(ctypes.Structure):
+    _fields_ = [
+        ("st_dev", ctypes.c_ulong),     # dispositivo
+        ("st_ino", ctypes.c_ulong),     # inode
+        ("st_nlink", ctypes.c_ulong),   # número de links
+        ("st_mode", ctypes.c_uint),     # modo do arquivo
+        ("st_uid", ctypes.c_uint),      # ID do usuário
+    ]
+
+#========================#
+#SEÇÃO DE COLETA DE DADOS#
+#========================#
 
 # Define os tipos de entrada e saída esperados pelas funções
 
@@ -92,7 +103,7 @@ def pega_sistema() -> Sistema:
 def coleta_dados_memoria_sistema():
     with open("/proc/meminfo") as pastaMem:
         dadosMem = pastaMem.read().strip().split() 
-        #OBS: Não é o melhor método já que isso gera um vetor de >100 posições mas funciona e permite que outros dados sejam extraidos mais facilmente
+        #OBS: Não é o melhor método já que isso gera um vetor de >100 posições mas funciona e permite que outros dados sejam extraidos mais facilmente se necessário
 
     return dadosMem
 
@@ -202,7 +213,6 @@ def calcula_uso_processador(sistema: Sistema):
     
     diferencaSoma = somaSegundaAmostragem - somaPrimeiraAmostragem
     diferencaTotal = totalSegundaAmostragem - totalPrimeiraAmostragem
-        
 
     percentualProcessadorOcupado = round(100 * (diferencaSoma / diferencaTotal), 2)
     percentualProcessadorLivre = 100 - percentualProcessadorOcupado
