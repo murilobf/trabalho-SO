@@ -85,7 +85,6 @@ def pega_ids(caminho: str):
 
     return ids
 
-
 # Pega os dados globais do sistema
 def pega_sistema() -> Sistema:
 
@@ -110,12 +109,16 @@ def coleta_dados_memoria_sistema():
 
     return dadosMem
 
-#Pega os processos do sistema e seus dados  
+# Coleta dados do processador
 def coleta_dados_processador():
     with open("/proc/stat") as pastaProc:
         dadosProcessador = pastaProc.read().strip().split()
     return dadosProcessador
 
+# A seção abaixo coleta todos os processos do sistema e suas informações
+
+# Coleta alguns dados variados do sistema, no momento usado principalmente para pegar o nome do processo (o indice [1])
+# Pegamos algumas outras informações para, se necessário
 def coleta_infos_processo(pid) -> list:
     valores_necessarios = [0,1,2,3,10,13,14,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
     dadosProcessos = []
@@ -126,16 +129,38 @@ def coleta_infos_processo(pid) -> list:
         
     return dadosProcessos
 
+# Pega o id do usuário que chamou o processo
 def coleta_usuario_processo(pid: int) -> int:
     caminho = f"/proc/{pid}".encode('utf-8')
     stat = Stat()
 
     if libc.stat(caminho, ctypes.byref(stat)) == 0:
-        print(stat.st_uid)
         return stat.st_uid
     else:
         print("Erro ao coletar o usuário do processo")
 
+# Pega dados da memória
+def coleta_dados_memoria(pid: int):
+    # Memoria. Nota: os dados vem todos numa única linha, é preciso separar. Nota 2: o tamanho é em páginas
+    with open(f"/proc/{pid}/statm") as pastaMem: #Isso abre (e o with faz com que feche sozinha também) o arquivo 
+        dadosMem = pastaMem.read().strip().split() #Lê, remove o \n no final da string e separa cada número em um elemento diferente 
+    
+    return dadosMem
+
+# Pega dados das threads de um processo
+def coleta_dados_threads(pid: int) -> list[Threads]: #vai receber o processo específico e retorna uma lista com os dados das threads dele
+    dadosThreads = []
+    tids = pega_ids(f"/proc/{pid}/task")
+    qntThreads = 0
+
+    for tid in tids:  #itera sobre os ids das threads pego pela função pega_ids
+    
+        with open(f"/proc/{pid}/task/{tid}/comm") as t: #abre a theread como um objeto
+            nomeThread = t.read().strip() # lê e tira os espaço que podem ter na palavra. Pega o nome da thread
+            qntThreads += 1
+        dadosThreads.append(Threads(pid, tid, qntThreads, nomeThread)) #faz a lista de dados da thread 
+
+    return dadosThreads
 
 #Pega os processos do sistema e seus dados
 def pega_processos() -> list[Processo]:
@@ -174,31 +199,6 @@ def pega_processos() -> list[Processo]:
             continue
 
     return processosRetorno
-
-# 0.3 Calcular % do uso do processador #
-
-#===> def coletar_dadosProcessos(self) ->list(classes.Processos):
-
-def coleta_dados_memoria(pid: int):
-    # Memoria. Nota: os dados vem todos numa única linha, é preciso separar. Nota 2: o tamanho é em páginas
-    with open(f"/proc/{pid}/statm") as pastaMem: #Isso abre (e o with faz com que feche sozinha também) o arquivo 
-        dadosMem = pastaMem.read().strip().split() #Lê, remove o \n no final da string e separa cada número em um elemento diferente 
-    
-    return dadosMem
-
-def coleta_dados_threads(pid: int) -> list[Threads]: #vai receber o processo específico e retorna uma lista com os dados das threads dele
-    dadosThreads = []
-    tids = pega_ids(f"/proc/{pid}/task")
-    qntThreads = 0
-
-    for tid in tids:  #itera sobre os ids das threads pego pela função pega_ids
-    
-        with open(f"/proc/{pid}/task/{tid}/comm") as t: #abre a theread como um objeto
-            nomeThread = t.read().strip() # lê e tira os espaço que podem ter na palavra
-            qntThreads += 1
-        dadosThreads.append(Threads(pid, tid, qntThreads, nomeThread)) #faz a lista de dados da thread 
-
-    return dadosThreads
 
 #============================#
 #SEÇÃO DE TRATAMENTO DOS DADOS
