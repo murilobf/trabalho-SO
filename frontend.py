@@ -23,7 +23,9 @@ class Dashboard(tk.Tk):
         frameDadosCpuSistema = ttk.Frame(frameSistema)
         frameDadosCpuSistema.pack(fill=tk.X, pady=5)
         frameDadosMemSistema = ttk.Frame(frameSistema)
-        frameDadosMemSistema.pack(fill=tk.X)
+        frameDadosMemSistema.pack(fill=tk.X, pady=5)
+        frameDadosOutrosSistema = ttk.Frame(frameSistema)
+        frameDadosOutrosSistema.pack(fill=tk.X, pady=5)
 
         # Os frames abaixos são os dados propriamente ditos
         # Esses se referem aos dados de CPU
@@ -41,6 +43,10 @@ class Dashboard(tk.Tk):
         self.dadoSistemaMemUsadaPer.pack(side=tk.LEFT, padx=10)
         self.dadoSistemaMemLivrePer = tk.Label(frameDadosMemSistema, text="")
         self.dadoSistemaMemLivrePer.pack(side=tk.LEFT, padx=10)
+
+        #Esses se referem a outros dados que até se encaixam nos critérios acima, mas que por estética estão separados
+        self.dadoSistemaMemVirtual = tk.Label(frameDadosOutrosSistema, text="")
+        self.dadoSistemaMemVirtual.pack(side=tk.LEFT, padx=10)
         
 
         # FRAME: Lista de processos
@@ -93,6 +99,7 @@ class Dashboard(tk.Tk):
 
     def atualiza_sistema(self, sistema: classes.Sistema):
         
+        #Dados principais de memória
         self.dadoSistemaMemTotal.config(text=f"Memória RAM total: {sistema.memFisicaKB}KB ou {sistema.memFisicaGB}GB")
         self.dadoSistemaMemLivre.config(text=f"RAM livre: {sistema.memLivreKB}KB ou {sistema.memLivreGB}GB")
         #Porcentagens
@@ -100,7 +107,8 @@ class Dashboard(tk.Tk):
         self.dadoSistemaCpuLivre.config(text=f"Porcentagem da CPU livre: {sistema.percentualProcessadorLivre:.2f}%")
         self.dadoSistemaMemUsadaPer.config(text=f"Porcentagem de RAM usada: {sistema.percentualMemOcupada:.2f}%")
         self.dadoSistemaMemLivrePer.config(text=f"Porcentagem de RAM livre: {sistema.percentualMemLivre:.2f}%")
-        
+        #Outros dados relevantes
+        self.dadoSistemaMemVirtual.config(text=f"Memória usada para o endereçamento virtual: {sistema.memVirtualKB}KB ou {sistema.memVirtualGB}GB")
 
     def atualiza_processos(self, sistema: classes.Sistema):
         self.listaProcessos.delete(0, tk.END)

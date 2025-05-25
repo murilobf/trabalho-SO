@@ -12,7 +12,8 @@ class Sistema:
         self.memLivreGB = 0
         self.memFisicaKB = 0
         self.memFisicaGB = 0
-        self.memVirtual = 0
+        self.memVirtualKB = 0
+        self.memVirtualGB = 0
         self.percentualMemLivre = 0
         self.percentualMemOcupada = 0
         #Vetor que guarda todos os processos atualmente no sistema
@@ -22,13 +23,14 @@ class Sistema:
     def adiciona_dados_processador(self, dadosProcessador: list):
         self.dadosProcessador = dadosProcessador
 
-    def adiciona_dados_memoria(self, memFisicaKB: int, memLivreKB: int, memVirtual: int):
+    def adiciona_dados_memoria(self, memFisicaKB: int, memLivreKB: int, memVirtualKB: int):
         self.memFisicaKB = memFisicaKB
         self.memLivreKB = memLivreKB
-        self.memVirtual = memVirtual
+        self.memVirtualKB = memVirtualKB
         #Converte a quantidade de KB para GB ao dividí-la por 1048576 (1024*1024)
         self.memLivreGB = round((int(memLivreKB)/1048576),2)
         self.memFisicaGB = round((int(memFisicaKB)/1048576),2)
+        self.memVirtualGB = round((int(memVirtualKB)/1048576),2)
         
 
          
