@@ -1,6 +1,3 @@
-'''https://stackoverflow.com/questions/39066998/what-are-the-meaning-of-values-at-proc-pid-stat'''
-
-from pathlib import Path
 import time
 from classes import Processo, Sistema, Threads
 import ctypes
@@ -21,18 +18,20 @@ class Dirent(ctypes.Structure):
 
 class Stat(ctypes.Structure):
     _fields_ = [
-        ("st_dev", ctypes.c_ulong),     # dispositivo
-        ("st_ino", ctypes.c_ulong),     # inode
-        ("st_nlink", ctypes.c_ulong),   # número de links
-        ("st_mode", ctypes.c_uint),     # modo do arquivo
-        ("st_uid", ctypes.c_uint),      # ID do usuário
+        ("st_dev", ctypes.c_ulong),
+        ("st_ino", ctypes.c_ulong),
+        ("st_nlink", ctypes.c_ulong),
+        ("st_mode", ctypes.c_uint),
+        ("st_uid", ctypes.c_uint),
+        ("st_gid", ctypes.c_uint),
+        ("__pad", ctypes.c_byte * 256)  # para evitar ler além dos limites
     ]
 
 #========================#
 #SEÇÃO DE COLETA DE DADOS#
 #========================#
 
-# Define os tipos de entrada e saída esperados pelas funções
+# Define os tipos de entrada e saída esperados pelas funções que usamos do ctype
 
 # Pega uma string (ponteiro de char) e retorna o objeto de tipo DIR (definido no ctype) presente dela (por isso é um ponteiro pra void)
 libc.opendir.argtypes = [ctypes.c_char_p]
@@ -45,6 +44,10 @@ libc.readdir.restype = ctypes.POINTER(Dirent)
 # Pega um ponteiro pra void (o DIR) e retorna um inteiro
 libc.closedir.argtypes = [ctypes.c_void_p]
 libc.closedir.restype = ctypes.c_int
+
+# Pega uma string e retorna um ponteiro pro
+libc.stat.argtypes = [ctypes.c_char_p, ctypes.POINTER(Stat)]
+libc.stat.restype = ctypes.c_int
 
 def pega_ids(caminho: str):
 
@@ -123,6 +126,17 @@ def coleta_infos_processo(pid) -> list:
         
     return dadosProcessos
 
+def coleta_usuario_processo(pid: int) -> int:
+    caminho = f"/proc/{pid}".encode('utf-8')
+    stat = Stat()
+
+    if libc.stat(caminho, ctypes.byref(stat)) == 0:
+        print(stat.st_uid)
+        return stat.st_uid
+    else:
+        print("Erro ao coletar o usuário do processo")
+
+
 #Pega os processos do sistema e seus dados
 def pega_processos() -> list[Processo]:
     processosRetorno = []
@@ -140,7 +154,7 @@ def pega_processos() -> list[Processo]:
             dadosProcesso = coleta_infos_processo(pid)
             
             #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
-            usuario = Path(f"/proc/{pid}").stat().st_uid #Coleta o ID do usuário referente ao processo
+            usuario = coleta_usuario_processo(pid)
 
             processo.adiciona_dados_basicos(pid, dadosProcesso[1], usuario) #Adiciona id, nome do processo e o id do usuário
             
