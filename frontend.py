@@ -169,3 +169,8 @@ class Dashboard(tk.Tk):
         tk.Label(janelaDetalhes, text=f"PID: {processo.pid}").pack()
         tk.Label(janelaDetalhes, text=f"Nome: {processo.nome}").pack()
         tk.Label(janelaDetalhes, text=f"Usuário: {processo.usuario}").pack()        
+        tk.Label(janelaDetalhes, text=f"Quantidade de memória alocada: {processo.memAlocada}").pack()
+        tk.Label(janelaDetalhes, text=f"Quantidade total de páginas na memória: {processo.qtdePaginasTotal}").pack()
+        tk.Label(janelaDetalhes, text=f"Quantidade de páginas de TEXT: {processo.qtdePaginasCodigo}").pack()
+        tk.Label(janelaDetalhes, text=f"Quantidade de páginas de DATA+STACK: {processo.qtdePaginasOutros}").pack()
+        #tk.Label(janelaDetalhes, text=f": {processo.}").pack()

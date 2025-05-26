@@ -65,7 +65,7 @@ class Processo:
         self.nome = ""
         self.usuario = ""
         #Dados relativos ao requisito 2 do trabalho (memória)
-        self.mem_alocada = 0
+        self.memAlocada = 0
         self.qtdePaginasTotal = 0
         self.qtdePaginasCodigo = 0
         self.qtdePaginasOutros = 0
@@ -85,7 +85,7 @@ class Processo:
         self.threads = threads
 
     def adiciona_dados_memoria(self, qtdePaginasTotal: int, qtdePaginasCodigo: int, qtdePaginasOutros: int):
-        self.mem_alocada = self.calcula_pagina_kb(qtdePaginasTotal)
+        self.memAlocada = self.calcula_pagina_kb(qtdePaginasTotal)
         self.qtdePaginasTotal = qtdePaginasTotal
         self.qtdePaginasCodigo = qtdePaginasCodigo
         self.qtdePaginasOutros = qtdePaginasOutros # Soma da quantidade de páginas usadas por data e por stack
