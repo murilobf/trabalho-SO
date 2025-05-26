@@ -15,8 +15,7 @@ class Dashboard(tk.Tk):
         # FRAME: Dados globais do sistema
         # Seria a "div" externa, tem o título 
         frameSistema = ttk.Frame(self)
-        frameSistema.pack(side=tk.TOP, fill=tk.X, expand=False, padx=5, pady=5)
-        '''FALTA TERMINAR'''
+        frameSistema.pack(side=tk.TOP, fill=tk.X, expand=False, padx=5, pady=5) 
         ttk.Label(frameSistema, text="Dados do Sistema", font=("Helvetica, 12")).pack(pady=5)
 
         # Guarda os frames de dados
@@ -58,6 +57,8 @@ class Dashboard(tk.Tk):
         ttk.Label(frameProcessos, text="Processos em Execução", font=("Helvetica", 12)).pack(pady=5)
         self.listaProcessos = tk.Listbox(frameProcessos, width=60)
         self.listaProcessos.pack(fill=tk.BOTH, expand=True)
+        # Binda um evento (no caso, chamar a função mostra_detalhes_processo) aos elementos da lista de processos
+        self.listaProcessos.bind("<<ListboxSelect>>", self.mostra_detalhes_processo)
 
         # FRAME: Gráficos
         frameGraficoMemoria = ttk.Frame(self)
@@ -67,6 +68,7 @@ class Dashboard(tk.Tk):
 
         self.dadosMemoria = []
         self.dadosCpu = []
+        self.listaObjetosProcessos = []
 
         # Gráfico de uso de memória
         self.figMem, self.axMem = plt.subplots(figsize=(5, 3))
@@ -90,6 +92,7 @@ class Dashboard(tk.Tk):
 
         self.atualiza_interface(filaTI)
 
+    #Chama as funções que vão atualizar o dashboard
     def atualiza_interface(self, filaTI: Queue):
         
         auxSistema = filaTI.get()
@@ -99,6 +102,7 @@ class Dashboard(tk.Tk):
 
         self.after(1000, self.atualiza_interface, filaTI)
 
+    #Atualiza os dados mostrados na parte de sistema global (aba superior)
     def atualiza_sistema(self, sistema: classes.Sistema):
         
         #Dados principais de memória
@@ -113,20 +117,31 @@ class Dashboard(tk.Tk):
         #Outros dados relevantes
         self.dadoSistemaMemVirtual.config(text=f"Memória usada para o endereçamento virtual: {sistema.memVirtualKB}KB ou {sistema.memVirtualGB}GB")
 
+    #Atualia a lista de processos
     def atualiza_processos(self, sistema: classes.Sistema):
-        self.listaProcessos.delete(0, tk.END)
-        for processo in sistema.retorna_processos():
+        #Pega todos os elementos atualmente na lista de processos do objeto sistema
+        self.listaObjetosProcessos = sistema.retorna_processos()
+
+        #Deleta a lista anterior (apenas na interface)
+        self.listaProcessos.delete(0,tk.END)
+        #Imprime os elementos dessa lista
+        for processo in self.listaObjetosProcessos:
             self.listaProcessos.insert(tk.END, processo.retorna_string_dados())
 
+    #Atualiza os gráficos de uso de memória e CPU
     def atualiza_grafico(self, sistema: classes.Sistema):
+
+        #Apaga o ponto mais velho quando houver mais que 30 elementos na lista
         if len(self.dadosMemoria) >= 30:
             self.dadosMemoria.pop(0)
         if len(self.dadosCpu) >= 30:
             self.dadosCpu.pop(0)
 
+        #Adiciona mais um ponto
         self.dadosMemoria.append(sistema.percentualMemOcupada)
         self.dadosCpu.append(sistema.percentualProcessadorOcupado)
 
+        #Desenha o gráfico
         self.linhaMem.set_data(range(len(self.dadosMemoria)), self.dadosMemoria)
         self.axMem.set_xlim(0, max(30, len(self.dadosMemoria)))
         self.canvasMem.draw()
@@ -134,3 +149,23 @@ class Dashboard(tk.Tk):
         self.linhaCpu.set_data(range(len(self.dadosCpu)), self.dadosCpu)
         self.axCpu.set_xlim(0, max(30, len(self.dadosCpu)))
         self.canvasCpu.draw()
+
+    def mostra_detalhes_processo(self, event):
+        selecao = self.listaProcessos.curselection()
+        if not selecao:
+            return
+
+        #Pega o índice equivalente ao processo da lista de processos clicada pelo usuário
+        indice = selecao[0]
+        processo = self.listaObjetosProcessos[indice]  
+
+        janelaDetalhes = tk.Toplevel(self)
+        janelaDetalhes.title("Detalhes do Processo")
+        janelaDetalhes.geometry("400x250")
+
+        #Destrói a janela quando o usuário clica fora dela
+        janelaDetalhes.bind("<FocusOut>",lambda e: janelaDetalhes.destroy())
+        # Exiba informações extras do processo
+        tk.Label(janelaDetalhes, text=f"PID: {processo.pid}").pack()
+        tk.Label(janelaDetalhes, text=f"Nome: {processo.nome}").pack()
+        tk.Label(janelaDetalhes, text=f"Usuário: {processo.usuario}").pack()        

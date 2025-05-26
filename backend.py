@@ -16,6 +16,7 @@ class Dirent(ctypes.Structure):
         ("d_name", ctypes.c_char * 256)
     ]
 
+#Classe usada para guardar
 class Stat(ctypes.Structure):
     _fields_ = [
         ("st_dev", ctypes.c_ulong),
@@ -24,7 +25,7 @@ class Stat(ctypes.Structure):
         ("st_mode", ctypes.c_uint),
         ("st_uid", ctypes.c_uint),
         ("st_gid", ctypes.c_uint),
-        ("__pad", ctypes.c_byte * 256)  # para evitar ler além dos limites
+        ("__pad", ctypes.c_byte * 256)  # para evitar ler além dos limites, se tirar dá segmentation fault
     ]
 
 #========================#
@@ -49,6 +50,7 @@ libc.closedir.restype = ctypes.c_int
 libc.stat.argtypes = [ctypes.c_char_p, ctypes.POINTER(Stat)]
 libc.stat.restype = ctypes.c_int
 
+#Função usada para pegar os nomes (ids) de pastas dentro
 def pega_ids(caminho: str):
 
     #O opendir não aceita uma variável do tipo str, tem que converter usando a função abaixo para que seja um char*
