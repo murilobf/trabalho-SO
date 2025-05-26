@@ -7,6 +7,7 @@ class Sistema:
         self.dadosProcessador = []
         self.percentualProcessadorLivre = 0
         self.percentualProcessadorOcupado = 0
+        self.percentualProcessadorOcioso = 0
         #Dados de memória
         self.memLivreKB = 0
         self.memLivreGB = 0
@@ -32,9 +33,6 @@ class Sistema:
         self.memFisicaGB = round((int(memFisicaKB)/1048576),2)
         self.memVirtualGB = round((int(memVirtualKB)/1048576),2)
         
-
-         
-
     def adiciona_porcentagens_memoria(self, percentualMemLivre: float, percentualMemOcupada: float):
         self.percentualMemLivre = percentualMemLivre
         self.percentualMemOcupada = percentualMemOcupada
@@ -42,6 +40,9 @@ class Sistema:
     def adiciona_porcentagens_processador(self, percentualProcessadorLivre: float, percentualProcessadorOcupado: float):
         self.percentualProcessadorLivre = percentualProcessadorLivre
         self.percentualProcessadorOcupado = percentualProcessadorOcupado
+
+    def adiciona_porcentagem_ocioso(self, percentualOcioso: float):
+        self.percentualProcessadorOcioso = percentualOcioso
         
     def adiciona_processos(self, processos):
         self.processos = processos

@@ -12,7 +12,7 @@ class Dirent(ctypes.Structure):
         ("d_ino", ctypes.c_ulong),
         ("d_off", ctypes.c_long),
         ("d_reclen", ctypes.c_ushort),
-        ("d_type", ctypes.c_ubyte),
+        ("d_type", ctypes.c_ubyte), 
         ("d_name", ctypes.c_char * 256)
     ]
 
@@ -214,21 +214,37 @@ def calcula_uso_memoria(sistema: Sistema):
 
     sistema.adiciona_porcentagens_memoria(percentualMemLivre, percentualMemOcupada)
 
-# Calcula uso da cpu por um processo em um intervalo de tempo
+# Calcula uso da cpu pelo sistema em um intervalo de tempo (em %)
 def calcula_uso_processador(sistema: Sistema):
+
+    # Soma todos os tempo em que o processador não está ocioso (em modo usuario, usuario de baixa prioridade e kernel)
     somaPrimeiraAmostragem = float(sistema.dadosProcessador[1]) + float(sistema.dadosProcessador[2]) + float(sistema.dadosProcessador[3])
+    # Pega o tempo total de uso do processador (a soma anterior junto do tempo em que ele está em modo ocioso)
     totalPrimeiraAmostragem = somaPrimeiraAmostragem + float(sistema.dadosProcessador[4])
 
     time.sleep(0.5)  # Espera curta para medir diferença
 
     auxDadosProcessador = coleta_dados_processador()
+    # Faz o mesmo só que com novos dados 
     somaSegundaAmostragem = float(auxDadosProcessador[1]) + float(auxDadosProcessador[2]) + float(auxDadosProcessador[3])
     totalSegundaAmostragem = somaSegundaAmostragem + float(auxDadosProcessador[4])
     
+    # Pega a diferença entre as duas medições. Isso é necessário pois /proc/stat guarda os tempos desde a inicialização do sistema.
     diferencaSoma = somaSegundaAmostragem - somaPrimeiraAmostragem
     diferencaTotal = totalSegundaAmostragem - totalPrimeiraAmostragem
 
+    # Transforma em porcentagens
     percentualProcessadorOcupado = round(100 * (diferencaSoma / diferencaTotal), 2)
     percentualProcessadorLivre = 100 - percentualProcessadorOcupado
 
     sistema.adiciona_porcentagens_processador(percentualProcessadorLivre, percentualProcessadorOcupado) 
+
+# Calculo a porcentagem de tempo que o processdor ficou ocioso
+
+def calcula_processador_ocioso(sistema: Sistema):
+
+    # Pega o tempo total de uso do processador e o divide por todos os dados de uso do processador (em modo usuario, usuario de baixa prioridade, kernel e ocioso)
+    somaTotal = (float(sistema.dadosProcessador[1]) + float(sistema.dadosProcessador[2]) + float(sistema.dadosProcessador[3])+ float(sistema.dadosProcessador[4]))
+    percentualOcioso = round(100*float(sistema.dadosProcessador[4])/somaTotal,2)
+
+    sistema.adiciona_porcentagem_ocioso(percentualOcioso)

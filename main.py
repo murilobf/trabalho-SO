@@ -30,6 +30,7 @@ def loop_de_tratamento():
         auxSistema = filaCT.get()
         backend.calcula_uso_memoria(auxSistema)
         backend.calcula_uso_processador(auxSistema)
+        backend.calcula_processador_ocioso(auxSistema)
         filaTI.put(auxSistema)
 
 #=========================#

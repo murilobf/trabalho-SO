@@ -33,6 +33,8 @@ class Dashboard(tk.Tk):
         self.dadoSistemaCpuUsado.pack(side=tk.LEFT, padx=10)
         self.dadoSistemaCpuLivre = tk.Label(frameDadosCpuSistema, text="")
         self.dadoSistemaCpuLivre.pack(side=tk.LEFT, padx=10)
+        self.dadoSistemaCpuOcioso = tk.Label(frameDadosCpuSistema, text="")
+        self.dadoSistemaCpuOcioso.pack(side=tk.LEFT,padx=10)
 
         #Esses se referem aos dados de memória
         self.dadoSistemaMemLivre = tk.Label(frameDadosMemSistema, text="")
@@ -105,6 +107,7 @@ class Dashboard(tk.Tk):
         #Porcentagens
         self.dadoSistemaCpuUsado.config(text=f"Porcentagem da CPU usada: {sistema.percentualProcessadorOcupado:.2f}%")
         self.dadoSistemaCpuLivre.config(text=f"Porcentagem da CPU livre: {sistema.percentualProcessadorLivre:.2f}%")
+        self.dadoSistemaCpuOcioso.config(text=f"Porcentagem de tempo em que a CPU estava ociosa: {sistema.percentualProcessadorOcioso:.2f}%")
         self.dadoSistemaMemUsadaPer.config(text=f"Porcentagem de RAM usada: {sistema.percentualMemOcupada:.2f}%")
         self.dadoSistemaMemLivrePer.config(text=f"Porcentagem de RAM livre: {sistema.percentualMemLivre:.2f}%")
         #Outros dados relevantes
