@@ -190,7 +190,7 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
             #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
             usuario = coleta_usuario_processo(pid)
 
-            processo.adiciona_dados_basicos(pid, dadosProcesso[1], usuario) #Adiciona id, nome do processo e o id do usuário
+            processo.adiciona_dados_basicos(pid, dadosProcesso[1], usuario, dadosProcesso[2]) #Adiciona id, nome do processo e o id do usuário
             
             #Threads
             threads = (coleta_dados_threads(pid))
@@ -201,15 +201,16 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
 
             # Coleta e guarda a memória do processo
             dadosMem = coleta_dados_memoria(pid)
-            processo.adiciona_dados_memoria(dadosMem[0],dadosMem[1],dadosMem[3],dadosMem[5]) #memTotal em kb, memTotal em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
+            processo.adiciona_dados_memoria(dadosMem[0],dadosMem[1],dadosMem[3],dadosMem[5]) #memTotal em páginas, memTotal residente em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
 
             # Adiciona o processo na lista de processos
             processosRetorno.append(processo)
-            #Adiciona quantidade de processos total no sistema
-            sistema.adiciona_quantidade_processos(len(processosRetorno))
 
         except FileNotFoundError:
             continue
+    
+    #Adiciona quantidade de processos total no sistema
+    sistema.adiciona_quantidade_processos(len(processosRetorno))
 
     return processosRetorno
 
