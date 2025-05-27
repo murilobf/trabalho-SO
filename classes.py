@@ -91,7 +91,10 @@ class Processo:
     
     def adiciona_threads(self, threads: list):
         self.threads = threads
-        
+    
+    def adiciona_quantidade_threads(self, qntThreadsProcesso:int):
+        self.qtdeThreads = qntThreadsProcesso
+
     def adiciona_dados_memoria(self, qtdePaginasTotal: int, qtdePaginasCodigo: int, qtdePaginasOutros: int):
         self.memAlocada = self.calcula_pagina_kb(qtdePaginasTotal)
         self.qtdePaginasTotal = qtdePaginasTotal
@@ -102,8 +105,9 @@ class Processo:
         return f"ID: {self.pid} | Processo: {self.nome} | Usuário: {self.usuario}"
 
 class Threads:
-    def __init__(self, pid: int, tid: int, nomeThread: str):
+    def __init__(self, pid: int, tid: int, nomeThread: str, estado:str):
         self.pid = pid
         self.tid = tid
         self.nomeThread = nomeThread
+        self.estadoThread = estado
 

@@ -155,9 +155,17 @@ def coleta_dados_threads(pid: int) -> list[Threads]: #vai receber o processo esp
     tids = pega_ids(f"/proc/{pid}/task")
 
     for tid in tids:  #itera sobre os ids das threads pego pela função pega_ids
-        with open(f"/proc/{pid}/task/{tid}/comm") as t: #abre a theread como um objeto
-            nomeThread = t.read().strip() # lê e tira os espaço que podem ter na palavra. Pega o nome da thread
-        dadosThreads.append(Threads(pid, tid, nomeThread)) #faz a lista de dados da thread 
+        with open(f"/proc/{pid}/task/{tid}/status") as t: #abre a theread como um objeto
+            linhas = t.readlines()
+            nomeThread = ""
+            estado = ""
+            for linha in linhas:
+                if linha.startswith("Name:"):
+                    nomeThread = linha.split()[1]
+                elif linha.startswith("State:"):
+                    estado = linha.split()[1]
+                #nomeThread = t.read().strip() # lê e tira os espaço que podem ter na palavra. Pega o nome da thread
+        dadosThreads.append(Threads(pid, tid, nomeThread, estado)) #faz a lista de dados da thread 
 
     return dadosThreads
 
@@ -186,6 +194,7 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
             threads = (coleta_dados_threads(pid))
             #Adiciona quantidade de threads total no prcessador
             sistema.adiciona_quantidade_threads(len(threads))
+            processo.adiciona_quantidade_threads(len(threads))
             processo.adiciona_threads(threads)
 
             # Coleta e guarda a memória do processo
@@ -196,7 +205,6 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
             processosRetorno.append(processo)
             #Adiciona quantidade de processos total no sistema
             sistema.adiciona_quantidade_processos(len(processosRetorno))
-
 
         except FileNotFoundError:
             continue

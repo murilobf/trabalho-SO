@@ -120,11 +120,11 @@ class Dashboard(tk.Tk):
         self.dadoSistemaCpuOcioso.config(text=f"Porcentagem de tempo em que a CPU estava ociosa: {sistema.percentualProcessadorOcioso:.2f}%")
         self.dadoSistemaMemUsadaPer.config(text=f"Porcentagem de RAM usada: {sistema.percentualMemOcupada:.2f}%")
         self.dadoSistemaMemLivrePer.config(text=f"Porcentagem de RAM livre: {sistema.percentualMemLivre:.2f}%")
-        #Outros dados relevantes
-        self.dadoSistemaMemVirtual.config(text=f"Memória usada para o endereçamento virtual: {sistema.memVirtualKB}KB ou {sistema.memVirtualGB}GB")
+        #Quantidade de processos e threads do sistema
         self.dadoSistemaQtdProcessos.config(text=f"Quantidade de processos: {sistema.quantidadeProcessos}")
         self.dadoSistemaQtdThreads.config(text=f"Quantidade de threads: {sistema.quantidadeThreads}")
-
+        #Outros dados relevantes
+        self.dadoSistemaMemVirtual.config(text=f"Memória usada para o endereçamento virtual: {sistema.memVirtualKB}KB ou {sistema.memVirtualGB}GB")
 
     #Atualia a lista de processos
     def atualiza_processos(self, sistema: classes.Sistema):
@@ -178,8 +178,38 @@ class Dashboard(tk.Tk):
         tk.Label(janelaDetalhes, text=f"PID: {processo.pid}").pack()
         tk.Label(janelaDetalhes, text=f"Nome: {processo.nome}").pack()
         tk.Label(janelaDetalhes, text=f"Usuário: {processo.usuario}").pack()        
+        tk.Label(janelaDetalhes, text=f"Quantidade de Threads: {processo.qtdeThreads}").pack()
         tk.Label(janelaDetalhes, text=f"Quantidade de memória alocada: {processo.memAlocada}").pack()
         tk.Label(janelaDetalhes, text=f"Quantidade total de páginas na memória: {processo.qtdePaginasTotal}").pack()
         tk.Label(janelaDetalhes, text=f"Quantidade de páginas de TEXT: {processo.qtdePaginasCodigo}").pack()
         tk.Label(janelaDetalhes, text=f"Quantidade de páginas de DATA+STACK: {processo.qtdePaginasOutros}").pack()
         #tk.Label(janelaDetalhes, text=f": {processo.}").pack()
+
+        # Separador da parte das Threads
+        ttk.Separator(janelaDetalhes, orient='horizontal').pack(fill='x', pady=5)
+        tk.Label(janelaDetalhes, text="Threads do Processo:", font=('Helvetica', 10, 'bold')).pack()
+
+        # Frame com scrollbar para listar threads
+        frameThreads = tk.Frame(janelaDetalhes)
+        frameThreads.pack(fill=tk.BOTH, expand=True)
+
+        canvas = tk.Canvas(frameThreads)
+        scrollbar = tk.Scrollbar(frameThreads, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Preenche com as threads
+        for thread in processo.threads:
+            tk.Label(scrollable_frame, text=f"TID: {thread.tid} | Nome: {thread.nomeThread} | Estado: {thread.estadoThread}").pack(anchor='w', padx=10)
