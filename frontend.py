@@ -49,6 +49,12 @@ class Dashboard(tk.Tk):
         self.dadoSistemaMemVirtual = tk.Label(frameDadosOutrosSistema, text="")
         self.dadoSistemaMemVirtual.pack(side=tk.LEFT, padx=10)
         
+        # Dados adicionais: quantidade de processos e threads
+        self.dadoSistemaQtdProcessos = tk.Label(frameDadosOutrosSistema, text="")
+        self.dadoSistemaQtdProcessos.pack(side=tk.LEFT, padx=10)
+
+        self.dadoSistemaQtdThreads = tk.Label(frameDadosOutrosSistema, text="")
+        self.dadoSistemaQtdThreads.pack(side=tk.LEFT, padx=10)
 
         # FRAME: Lista de processos
         frameProcessos = ttk.Frame(self)
@@ -116,6 +122,9 @@ class Dashboard(tk.Tk):
         self.dadoSistemaMemLivrePer.config(text=f"Porcentagem de RAM livre: {sistema.percentualMemLivre:.2f}%")
         #Outros dados relevantes
         self.dadoSistemaMemVirtual.config(text=f"Memória usada para o endereçamento virtual: {sistema.memVirtualKB}KB ou {sistema.memVirtualGB}GB")
+        self.dadoSistemaQtdProcessos.config(text=f"Quantidade de processos: {sistema.quantidadeProcessos}")
+        self.dadoSistemaQtdThreads.config(text=f"Quantidade de threads: {sistema.quantidadeThreads}")
+
 
     #Atualia a lista de processos
     def atualiza_processos(self, sistema: classes.Sistema):

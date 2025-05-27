@@ -19,7 +19,9 @@ class Sistema:
         self.percentualMemOcupada = 0
         #Vetor que guarda todos os processos atualmente no sistema
         self.processos = []
-        self.cont = 0
+        self.quantidadeProcessos = 0
+        #Quantidade de Threads no processador
+        self.quantidadeThreads = 0
 
     def adiciona_dados_processador(self, dadosProcessador: list):
         self.dadosProcessador = dadosProcessador
@@ -53,6 +55,11 @@ class Sistema:
     def getMemOcupada(self):
         return self.percentualMemOcupada
 
+    def adiciona_quantidade_threads(self, qtdeThreads: int): 
+        self.quantidadeThreads += qtdeThreads
+
+    def adiciona_quantidade_processos(self, qntdeProcessos):
+        self.quantidadeProcessos = qntdeProcessos
 
 #Classe que armazena os dados de um processo
 class Processo:
@@ -69,11 +76,12 @@ class Processo:
         self.qtdePaginasTotal = 0
         self.qtdePaginasCodigo = 0
         self.qtdePaginasOutros = 0
+        #Dados sobre as threads do processo
         self.threads = []
+        self.qtdeThreads = 0
 
     def calcula_pagina_kb(self, dadoPag):
         auxMemTotalKb = (int(dadoPag)*tamPaginakB) # Multiplicação para tornar o dado de quantidade de páginas usadas no total para tamanho em KB
-
         return auxMemTotalKb
 
     def adiciona_dados_basicos(self, pid: int, nome: str, usuario: str):
@@ -83,7 +91,7 @@ class Processo:
     
     def adiciona_threads(self, threads: list):
         self.threads = threads
-
+        
     def adiciona_dados_memoria(self, qtdePaginasTotal: int, qtdePaginasCodigo: int, qtdePaginasOutros: int):
         self.memAlocada = self.calcula_pagina_kb(qtdePaginasTotal)
         self.qtdePaginasTotal = qtdePaginasTotal
@@ -94,9 +102,8 @@ class Processo:
         return f"ID: {self.pid} | Processo: {self.nome} | Usuário: {self.usuario}"
 
 class Threads:
-    def __init__(self, pid: int, tid: int, qntThread: int, nomeThread: str):
+    def __init__(self, pid: int, tid: int, nomeThread: str):
         self.pid = pid
         self.tid = tid
-        self.qntThread = qntThread
         self.nomeThread = nomeThread
 

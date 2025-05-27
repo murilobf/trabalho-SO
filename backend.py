@@ -98,7 +98,7 @@ def pega_sistema() -> Sistema:
     dadosMem = coleta_dados_memoria_sistema()
     sistemaRetorno.adiciona_dados_memoria(dadosMem[1], dadosMem[4], dadosMem[100]) #Memória física total, Memória física livre e total de memória usada para endereçamento virtual
 
-    processos = pega_processos()
+    processos = pega_processos(sistemaRetorno)
     sistemaRetorno.adiciona_processos(processos)
 
     return sistemaRetorno
@@ -153,19 +153,16 @@ def coleta_dados_memoria(pid: int):
 def coleta_dados_threads(pid: int) -> list[Threads]: #vai receber o processo específico e retorna uma lista com os dados das threads dele
     dadosThreads = []
     tids = pega_ids(f"/proc/{pid}/task")
-    qntThreads = 0
 
     for tid in tids:  #itera sobre os ids das threads pego pela função pega_ids
-    
         with open(f"/proc/{pid}/task/{tid}/comm") as t: #abre a theread como um objeto
             nomeThread = t.read().strip() # lê e tira os espaço que podem ter na palavra. Pega o nome da thread
-            qntThreads += 1
-        dadosThreads.append(Threads(pid, tid, qntThreads, nomeThread)) #faz a lista de dados da thread 
+        dadosThreads.append(Threads(pid, tid, nomeThread)) #faz a lista de dados da thread 
 
     return dadosThreads
 
 #Pega os processos do sistema e seus dados
-def pega_processos() -> list[Processo]:
+def pega_processos(sistema:Sistema) -> list[Processo]:
     processosRetorno = []
 
     pids = pega_ids("/proc")
@@ -187,6 +184,8 @@ def pega_processos() -> list[Processo]:
             
             #Threads
             threads = (coleta_dados_threads(pid))
+            #Adiciona quantidade de threads total no prcessador
+            sistema.adiciona_quantidade_threads(len(threads))
             processo.adiciona_threads(threads)
 
             # Coleta e guarda a memória do processo
@@ -195,6 +194,8 @@ def pega_processos() -> list[Processo]:
 
             # Adiciona o processo na lista de processos
             processosRetorno.append(processo)
+            #Adiciona quantidade de processos total no sistema
+            sistema.adiciona_quantidade_processos(len(processosRetorno))
 
 
         except FileNotFoundError:
