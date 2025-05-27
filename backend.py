@@ -87,6 +87,21 @@ def pega_ids(caminho: str):
 
     return ids
 
+
+#Lê meminfo para pegar todos os dados sobre memória do sistema, quais dados são lidos fica a cargo das funções que a chama
+def coleta_dados_memoria_sistema():
+    with open("/proc/meminfo") as pastaMem:
+        dadosMem = pastaMem.read().strip().split() 
+        #OBS: Não é o melhor método já que isso gera um vetor de >100 posições mas funciona e permite que outros dados sejam extraidos mais facilmente se necessário
+
+    return dadosMem
+
+# Coleta dados do processador
+def coleta_dados_processador():
+    with open("/proc/stat") as pastaProc:
+        dadosProcessador = pastaProc.read().strip().split()
+    return dadosProcessador
+
 # Pega os dados globais do sistema
 def pega_sistema() -> Sistema:
 
@@ -103,19 +118,6 @@ def pega_sistema() -> Sistema:
 
     return sistemaRetorno
 
-#Lê meminfo para pegar todos os dados sobre memória do sistema, quais dados são lidos fica a cargo das funções que a chama
-def coleta_dados_memoria_sistema():
-    with open("/proc/meminfo") as pastaMem:
-        dadosMem = pastaMem.read().strip().split() 
-        #OBS: Não é o melhor método já que isso gera um vetor de >100 posições mas funciona e permite que outros dados sejam extraidos mais facilmente se necessário
-
-    return dadosMem
-
-# Coleta dados do processador
-def coleta_dados_processador():
-    with open("/proc/stat") as pastaProc:
-        dadosProcessador = pastaProc.read().strip().split()
-    return dadosProcessador
 
 # A seção abaixo coleta todos os processos do sistema e suas informações
 
@@ -199,7 +201,7 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
 
             # Coleta e guarda a memória do processo
             dadosMem = coleta_dados_memoria(pid)
-            processo.adiciona_dados_memoria(dadosMem[0],dadosMem[3],dadosMem[5]) #memTotal em kb, memTotal em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
+            processo.adiciona_dados_memoria(dadosMem[0],dadosMem[1],dadosMem[3],dadosMem[5]) #memTotal em kb, memTotal em páginas, memtotal em pg usadas pelo código (text) e memtotal em pg usadas por outras coisas
 
             # Adiciona o processo na lista de processos
             processosRetorno.append(processo)

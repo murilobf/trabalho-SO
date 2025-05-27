@@ -179,8 +179,10 @@ class Dashboard(tk.Tk):
         tk.Label(janelaDetalhes, text=f"Nome: {processo.nome}").pack()
         tk.Label(janelaDetalhes, text=f"Usuário: {processo.usuario}").pack()        
         tk.Label(janelaDetalhes, text=f"Quantidade de Threads: {processo.qtdeThreads}").pack()
-        tk.Label(janelaDetalhes, text=f"Quantidade de memória alocada: {processo.memAlocada}KB").pack()
-        tk.Label(janelaDetalhes, text=f"Quantidade total de páginas na memória: {processo.qtdePaginasTotal}").pack()
+        tk.Label(janelaDetalhes, text=f"Quantidade de memória total: {processo.memTotal}KB").pack()
+        tk.Label(janelaDetalhes, text=f"Quantidade de memória presente na RAM: {processo.memResidente}KB").pack()
+        tk.Label(janelaDetalhes, text=f"Quantidade total de páginas: {processo.qtdePaginasTotal}").pack()
+        tk.Label(janelaDetalhes, text=f"Quantidade de páginas presentes na RAM: {processo.qtdePaginasResidente}").pack()
         tk.Label(janelaDetalhes, text=f"Quantidade de páginas de TEXT: {processo.qtdePaginasCodigo}").pack()
         tk.Label(janelaDetalhes, text=f"Quantidade de páginas de DATA+STACK: {processo.qtdePaginasOutros}").pack()
 

@@ -72,8 +72,10 @@ class Processo:
         self.nome = ""
         self.usuario = ""
         #Dados relativos ao requisito 2 do trabalho (memória)
-        self.memAlocada = 0
+        self.memTotal = 0
+        self.memResidente = 0
         self.qtdePaginasTotal = 0
+        self.qtdePaginasResidente = 0
         self.qtdePaginasCodigo = 0
         self.qtdePaginasOutros = 0
         #Dados sobre as threads do processo
@@ -95,9 +97,11 @@ class Processo:
     def adiciona_quantidade_threads(self, qntThreadsProcesso:int):
         self.qtdeThreads = qntThreadsProcesso
 
-    def adiciona_dados_memoria(self, qtdePaginasTotal: int, qtdePaginasCodigo: int, qtdePaginasOutros: int):
-        self.memAlocada = self.calcula_pagina_kb(qtdePaginasTotal)
+    def adiciona_dados_memoria(self, qtdePaginasTotal: int, qtdePaginasResidente: int, qtdePaginasCodigo: int, qtdePaginasOutros: int):
+        self.memTotal = self.calcula_pagina_kb(qtdePaginasTotal)
+        self.memResidente = self.calcula_pagina_kb(qtdePaginasResidente)
         self.qtdePaginasTotal = qtdePaginasTotal
+        self.qtdePaginasResidente = qtdePaginasResidente
         self.qtdePaginasCodigo = qtdePaginasCodigo
         self.qtdePaginasOutros = qtdePaginasOutros # Soma da quantidade de páginas usadas por data e por stack
 
