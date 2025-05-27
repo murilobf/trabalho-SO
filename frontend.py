@@ -170,7 +170,7 @@ class Dashboard(tk.Tk):
 
         janelaDetalhes = tk.Toplevel(self)
         janelaDetalhes.title("Detalhes do Processo")
-        janelaDetalhes.geometry("400x250")
+        janelaDetalhes.geometry("400x500")
 
         #Destrói a janela quando o usuário clica fora dela
         janelaDetalhes.bind("<FocusOut>",lambda e: janelaDetalhes.destroy())
@@ -179,11 +179,10 @@ class Dashboard(tk.Tk):
         tk.Label(janelaDetalhes, text=f"Nome: {processo.nome}").pack()
         tk.Label(janelaDetalhes, text=f"Usuário: {processo.usuario}").pack()        
         tk.Label(janelaDetalhes, text=f"Quantidade de Threads: {processo.qtdeThreads}").pack()
-        tk.Label(janelaDetalhes, text=f"Quantidade de memória alocada: {processo.memAlocada}").pack()
+        tk.Label(janelaDetalhes, text=f"Quantidade de memória alocada: {processo.memAlocada}KB").pack()
         tk.Label(janelaDetalhes, text=f"Quantidade total de páginas na memória: {processo.qtdePaginasTotal}").pack()
         tk.Label(janelaDetalhes, text=f"Quantidade de páginas de TEXT: {processo.qtdePaginasCodigo}").pack()
         tk.Label(janelaDetalhes, text=f"Quantidade de páginas de DATA+STACK: {processo.qtdePaginasOutros}").pack()
-        #tk.Label(janelaDetalhes, text=f": {processo.}").pack()
 
         # Separador da parte das Threads
         ttk.Separator(janelaDetalhes, orient='horizontal').pack(fill='x', pady=5)
