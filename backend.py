@@ -110,7 +110,7 @@ def pega_sistema() -> Sistema:
     sistemaRetorno.adiciona_dados_processador(dadosProcessador)
 
     dadosMem = coleta_dados_memoria_sistema()
-    sistemaRetorno.adiciona_dados_memoria(dadosMem[1], dadosMem[4], dadosMem[100]) #Memória física total, Memória física livre e total de memória usada para endereçamento virtual
+    sistemaRetorno.adiciona_dados_memoria(dadosMem[1], dadosMem[4], dadosMem[103]) #Memória física total, Memória física livre e total de memória usada para endereçamento virtual
 
     processos = pega_processos(sistemaRetorno)
     sistemaRetorno.adiciona_processos(processos)

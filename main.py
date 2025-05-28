@@ -24,7 +24,7 @@ def loop_de_coleta():
         time.sleep(1)
 
 #Responsável pelo "tratamento" dos dados (cálculos e quaisquer outras possíveis necessidades futuras)
-def loop_de_tratamento():
+def loop_de_tratamento():   
     while True:
         
         auxSistema = filaCT.get()
