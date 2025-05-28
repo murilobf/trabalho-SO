@@ -176,9 +176,10 @@ class Dashboard(tk.Tk):
         janelaDetalhes.bind("<FocusOut>",lambda e: janelaDetalhes.destroy())
         # Exiba informações extras do processo
         tk.Label(janelaDetalhes, text=f"PID: {processo.pid}").pack()
-        tk.Label(janelaDetalhes, text=f"Nome: {processo.nome}").pack()
+        tk.Label(janelaDetalhes, text=f"Nome: {processo.nome}").pack()      
         tk.Label(janelaDetalhes, text=f"Usuário: {processo.usuario}").pack()        
         tk.Label(janelaDetalhes, text=f"Quantidade de Threads: {processo.qtdeThreads}").pack()
+        tk.Label(janelaDetalhes, text=f"Prioridade: {processo.prioridade}").pack()        
         tk.Label(janelaDetalhes, text=f"Quantidade de memória total: {processo.memTotal}KB").pack()
         tk.Label(janelaDetalhes, text=f"Quantidade de memória presente na RAM: {processo.memResidente}KB").pack()
         tk.Label(janelaDetalhes, text=f"Quantidade total de páginas: {processo.qtdePaginasTotal}").pack()
@@ -213,4 +214,4 @@ class Dashboard(tk.Tk):
 
         # Preenche com as threads
         for thread in processo.threads:
-            tk.Label(scrollable_frame, text=f"TID: {thread.tid} | Nome: {thread.nomeThread} | Estado: {thread.estadoThread}").pack(anchor='w', padx=10)
+            tk.Label(scrollable_frame, text=f"TID: {thread.tid} | Nome: {thread.nomeThread} | Estado: {thread.estadoThread} |").pack(anchor='w', padx=10)

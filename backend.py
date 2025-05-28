@@ -87,7 +87,6 @@ def pega_ids(caminho: str):
 
     return ids
 
-
 #Lê meminfo para pegar todos os dados sobre memória do sistema, quais dados são lidos fica a cargo das funções que a chama
 def coleta_dados_memoria_sistema():
     with open("/proc/meminfo") as pastaMem:
@@ -124,7 +123,7 @@ def pega_sistema() -> Sistema:
 # Coleta alguns dados variados do sistema, no momento usado principalmente para pegar o nome do processo (o indice [1])
 # Pegamos algumas outras informações para, se necessário
 def coleta_infos_processo(pid) -> list:
-    valores_necessarios = [0,1,2,3,10,13,14,15,22,51] #define quais dados dos processos queremos acessar -> total: 52
+    valores_necessarios = [0,1,2,3,17] #define quais dados dos processos queremos acessar -> total: 52
     dadosProcessos = []
 
     with open(f"/proc/{pid}/stat") as pasta:
@@ -158,9 +157,9 @@ def coleta_dados_threads(pid: int) -> list[Threads]: #vai receber o processo esp
 
     for tid in tids:  #itera sobre os ids das threads pego pela função pega_ids
         with open(f"/proc/{pid}/task/{tid}/status") as t: #abre a theread como um objeto
-            linhas = t.readlines()
             nomeThread = ""
             estado = ""
+            linhas = t.readlines()
             for linha in linhas:
                 if linha.startswith("Name:"):
                     nomeThread = linha.split()[1]
@@ -190,7 +189,7 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
             #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
             usuario = coleta_usuario_processo(pid)
 
-            processo.adiciona_dados_basicos(pid, dadosProcesso[1], usuario, dadosProcesso[2]) #Adiciona id, nome do processo e o id do usuário
+            processo.adiciona_dados_basicos(pid, dadosProcesso[1], usuario, dadosProcesso[2], dadosProcesso[4]) #Adiciona id, nome do processo, id do usuário e prioridade
             
             #Threads
             threads = (coleta_dados_threads(pid))

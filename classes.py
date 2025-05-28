@@ -70,8 +70,10 @@ class Processo:
         #Dados identificadores do processo (id, nome, usuário)
         self.pid = 0
         self.nome = ""
+        self.ppid = ""
         self.usuario = ""
         self.estado = ""
+        self.prioridade = ""
         #Dados relativos ao requisito 2 do trabalho (memória)
         self.memTotal = 0
         self.memResidente = 0
@@ -87,11 +89,12 @@ class Processo:
         auxMemTotalKb = (int(dadoPag)*tamPaginakB) # Multiplicação para tornar o dado de quantidade de páginas usadas no total para tamanho em KB
         return auxMemTotalKb
 
-    def adiciona_dados_basicos(self, pid: int, nome: str, usuario: str, estado: str):
+    def adiciona_dados_basicos(self, pid: int, nome: str, usuario: str, estado: str, prioridade:str):
         self.pid = pid
         self.nome = nome
         self.usuario = usuario
         self.estado = estado
+        self.prioridade = prioridade
     
     def adiciona_threads(self, threads: list):
         self.threads = threads
