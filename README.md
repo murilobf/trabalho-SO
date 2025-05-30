@@ -9,7 +9,7 @@ A interface consiste em uma área para as informações do sistema como um todo,
 
 Comandos relevantes:
 
-make install - instala todas as dependências do programa
-make run - roda o programa
+- make install - instala todas as dependências do programa
+- make run - roda o programa
 
 Importante: o programa roda APENAS em sistemas Linux (bem como em máquinas virtuais/WSL)
