@@ -120,7 +120,7 @@ class Threads:
         self.nomeThread = nomeThread
         self.estadoThread = estado
 
-class NóArquivo:
+class NoArquivo:
     def __init__(self):
         self.nome = ""
         self.tipoNum = 0
@@ -128,3 +128,11 @@ class NóArquivo:
         self.tamanho = ""
         self.permissoes = ""
         self.filhos = []
+
+    def adicionaInformacoes(self, nome, tipoNum, tipoNome, tamanho, permissoes, filhos):
+        self.nome = nome
+        self.tipoNum = tipoNum
+        self.tipoNome = tipoNome
+        self.tamanho = tamanho
+        self.permissoes = permissoes
+        self.filhos = filhos

@@ -1,5 +1,5 @@
 import time
-from classes import Processo, Sistema, Threads
+from classes import Processo, Sistema, Threads, NoArquivo
 import ctypes
 import ctypes.util
 
@@ -17,16 +17,18 @@ class Dirent(ctypes.Structure):
         ("d_name", ctypes.c_char * 256)
     ]
 
-#Classe usada para guardar
+#Classe usada para guardar algumas informações a mais sobre o arquivo, principalmente usuário, permissões e tamanho
 class Stat(ctypes.Structure):
     _fields_ = [
         ("st_dev", ctypes.c_ulong),
         ("st_ino", ctypes.c_ulong),
         ("st_nlink", ctypes.c_ulong),
-        ("st_mode", ctypes.c_uint),
+        ("st_mode", ctypes.c_uint), # permissões
         ("st_uid", ctypes.c_uint),
         ("st_gid", ctypes.c_uint),
-        ("__pad", ctypes.c_byte * 256)  # para evitar ler além dos limites, se tirar dá segmentation fault
+        ("__pad", ctypes.c_byte * 256),  # para evitar ler além dos limites, se tirar dá segmentation fault
+        ("st_rdev", ctypes.c_ulong),
+        ("st_size", ctypes.c_long),  # tamanho do arquivo
     ]
 
 # Os tipos de arquivo definidos por d_type na classe Dirent, é mais prático definir na mão do que extrair do dirent.h do linux
@@ -88,7 +90,6 @@ def pega_ids(caminho: str):
 
             # Pega o nome da pasta, usaremos isso para verificar se o arquivo é ou nãp um processo
             nome = diretorio.contents.d_name.decode("utf-8")
-            print(diretorio.contents.d_type)
 
             # O arquivo é um processo quando seu nome possui um dígito
             if nome.isdigit():
@@ -231,18 +232,20 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
 
 # Função para montar a árvore de diretórios do sistema, de um tanto parecida com a função pega_ids
 
-def pega_arvore_diretorios(caminho: str):
+def pega_arvore_diretorios(caminho: str) -> NoArquivo:
     #O opendir não aceita uma variável do tipo str, tem que converter usando a função abaixo para que seja um char*
     caminhoBytes = caminho.encode('utf-8')
     # Ponteiro pro diretório específicado
     pdir = libc.opendir(caminhoBytes)
 
-    # Lista de retorno
-    ids = []
-
+    # Arquivos dentro do diretório (se existirem)
+    filhos = []
     try:
         # Acessa os diretórios enquanto existir um próximo
         while True:
+            no = NoArquivo()
+            stat = Stat()
+
             # Pega um ponteiro para o próximo diretório
             diretorio = libc.readdir(pdir)
             
@@ -252,20 +255,27 @@ def pega_arvore_diretorios(caminho: str):
 
             # Pega o nome da pasta, usaremos isso para verificar se o arquivo é ou nãp um processo
             nome = diretorio.contents.d_name.decode("utf-8")
-            print(diretorio.contents.d_type,"\n")
+            tipoNum = diretorio.contents.d_type
+            tipoNome = TIPOS.get(tipoNum)
+            
+            # Se o tipo do arquivo visto for "diretório" entra nele e refaz o processo recursivamente para todos os arquivos do sistema até se ter a árvore completa
+            if(tipoNum == 4):
+                caminho_recursivo = caminho + nome
+                filhos.append(pega_arvore_diretorios(caminho_recursivo))
 
-            # O arquivo é um processo quando seu nome possui um dígito
-            if nome.isdigit():
-                ids.append(nome)
+            if libc.stat(caminho, ctypes.byref(stat)) == 0:
+                tamanho = stat.st_size
+                permissoes = stat.st_mode
+            else:
+                print("Erro ao coletar dados do stat")
 
+            no.adicionaInformacoes(nome, tipoNum, tipoNome, tamanho, permissoes, filhos)
     #Apenas para fim de debug/evitar do código quebrar mesmo quando se encontra algum problema
     except Exception as e:
-        print(f"Erro ao abrir o proc: {e}")
+        print(f"Erro ao abrir o diretório: {e}")
     # Ao final, fecha o diretório
     finally:
-        libc.closedir(pdir)
-
-    
+        libc.closedir(pdir)  
 
 #============================#
 #SEÇÃO DE TRATAMENTO DOS DADOS
