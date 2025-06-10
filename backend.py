@@ -245,7 +245,7 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
         while True:
             no = NoArquivo()
             stat = Stat()
-
+            
             # Pega um ponteiro para o próximo diretório
             diretorio = libc.readdir(pdir)
             
@@ -257,19 +257,21 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
             nome = diretorio.contents.d_name.decode("utf-8")
             tipoNum = diretorio.contents.d_type
             tipoNome = TIPOS.get(tipoNum)
+            caminhoArquivoAtual = caminho + '/' + nome
             
             # Se o tipo do arquivo visto for "diretório" entra nele e refaz o processo recursivamente para todos os arquivos do sistema até se ter a árvore completa
-            if(tipoNum == 4):
-                caminho_recursivo = caminho + nome
-                filhos.append(pega_arvore_diretorios(caminho_recursivo))
-
-            if libc.stat(caminho, ctypes.byref(stat)) == 0:
+            if(tipoNum == 4 and nome != '.' and nome != '..'):
+                print(caminhoArquivoAtual)
+                filhos.append(pega_arvore_diretorios(caminhoArquivoAtual))
+            
+            if libc.stat(caminhoArquivoAtual.encode('utf-8'), ctypes.byref(stat)) == 0:
                 tamanho = stat.st_size
                 permissoes = stat.st_mode
             else:
                 print("Erro ao coletar dados do stat")
 
             no.adicionaInformacoes(nome, tipoNum, tipoNome, tamanho, permissoes, filhos)
+    
     #Apenas para fim de debug/evitar do código quebrar mesmo quando se encontra algum problema
     except Exception as e:
         print(f"Erro ao abrir o diretório: {e}")
@@ -277,6 +279,7 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
     finally:
         libc.closedir(pdir)  
 
+pega_arvore_diretorios("/")
 #============================#
 #SEÇÃO DE TRATAMENTO DOS DADOS
 #============================#
