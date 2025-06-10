@@ -8,9 +8,10 @@ libc = ctypes.CDLL(ctypes.util.find_library("c"))
 
 #Classe usada pra guardar informações sobre arquivos  (usamos diretamente apenas o d_name, mas se tirar o resto para de funcionarkkkk)
 class Dirent(ctypes.Structure):
+    _pack_ = 1
     _fields_ = [
-        ("d_ino", ctypes.c_ulong),
-        ("d_off", ctypes.c_long),
+        ("d_ino", ctypes.c_ulonglong),
+        ("d_off", ctypes.c_longlong),
         ("d_reclen", ctypes.c_ushort),
         ("d_type", ctypes.c_ubyte), 
         ("d_name", ctypes.c_char * 256)
@@ -27,6 +28,20 @@ class Stat(ctypes.Structure):
         ("st_gid", ctypes.c_uint),
         ("__pad", ctypes.c_byte * 256)  # para evitar ler além dos limites, se tirar dá segmentation fault
     ]
+
+# Os tipos de arquivo definidos por d_type na classe Dirent, é mais prático definir na mão do que extrair do dirent.h do linux
+# Mas caso precise extrair o caminho está em /usr/include/dirent.h
+TIPOS = {
+    0: "Desconhecido",
+    1: "Pipe nomeado",
+    2: "Arquivo de caractére",
+    4: "Diretório",
+    6: "Arquivo de bloco",
+    8: "Arquivo regular",
+    10: "Link simbólico",
+    12: "Socket",
+    14: "Entrada whiteout"
+}
 
 #========================#
 #SEÇÃO DE COLETA DE DADOS#
@@ -73,6 +88,7 @@ def pega_ids(caminho: str):
 
             # Pega o nome da pasta, usaremos isso para verificar se o arquivo é ou nãp um processo
             nome = diretorio.contents.d_name.decode("utf-8")
+            print(diretorio.contents.d_type)
 
             # O arquivo é um processo quando seu nome possui um dígito
             if nome.isdigit():
@@ -212,6 +228,44 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
     sistema.adiciona_quantidade_processos(len(processosRetorno))
 
     return processosRetorno
+
+# Função para montar a árvore de diretórios do sistema, de um tanto parecida com a função pega_ids
+
+def pega_arvore_diretorios(caminho: str):
+    #O opendir não aceita uma variável do tipo str, tem que converter usando a função abaixo para que seja um char*
+    caminhoBytes = caminho.encode('utf-8')
+    # Ponteiro pro diretório específicado
+    pdir = libc.opendir(caminhoBytes)
+
+    # Lista de retorno
+    ids = []
+
+    try:
+        # Acessa os diretórios enquanto existir um próximo
+        while True:
+            # Pega um ponteiro para o próximo diretório
+            diretorio = libc.readdir(pdir)
+            
+            # Se o atual não for um diretório ele não existe. Quebra o loop
+            if not diretorio:
+                break
+
+            # Pega o nome da pasta, usaremos isso para verificar se o arquivo é ou nãp um processo
+            nome = diretorio.contents.d_name.decode("utf-8")
+            print(diretorio.contents.d_type,"\n")
+
+            # O arquivo é um processo quando seu nome possui um dígito
+            if nome.isdigit():
+                ids.append(nome)
+
+    #Apenas para fim de debug/evitar do código quebrar mesmo quando se encontra algum problema
+    except Exception as e:
+        print(f"Erro ao abrir o proc: {e}")
+    # Ao final, fecha o diretório
+    finally:
+        libc.closedir(pdir)
+
+    
 
 #============================#
 #SEÇÃO DE TRATAMENTO DOS DADOS

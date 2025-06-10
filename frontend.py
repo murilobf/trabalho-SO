@@ -188,7 +188,7 @@ class Dashboard(tk.Tk):
         tk.Label(janelaDetalhes, text=f"Quantidade de páginas de DATA+STACK: {processo.qtdePaginasOutros}").pack()
 
         # Separador da parte das Threads
-        ttk.Separator(janelaDetalhes, orient='horizontal').pack(fill='x', pady=5)
+        ttk.Separator(janelaDetalhes, orient='horizontal').pack(fill= 'x', pady=5)
         tk.Label(janelaDetalhes, text="Threads do Processo:", font=('Helvetica', 10, 'bold')).pack()
 
         # Frame com scrollbar para listar threads
