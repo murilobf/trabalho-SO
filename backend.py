@@ -232,6 +232,8 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
     return processosRetorno
 
 # Função para montar a árvore de diretórios do sistema, de um tanto parecida com a função pega_ids
+import time
+
 
 def pega_arvore_diretorios(caminho: str) -> NoArquivo:
     #O opendir não aceita uma variável do tipo str, tem que converter usando a função abaixo para que seja um char*
@@ -264,16 +266,16 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
                 tamanho = stat.st_size
                 permissoes = stat.st_mode & 0o777 #O valor é retornado em decimal mas o que importa pra gente é o valor em octal. Então precisamos converter.
                 #Pegamos apenas os 3 últimos digitos (que são os que guardam as permissões), para isso serve o bitwise AND (&) 0o777. oct retorna uma string então precisamos converter pra int
-                permissoesUsuario = oct(permissoes)[-1] #Pega apenas o último digito (o do usuário) 
-                print(permissoesUsuario)
+                permissoesUsuario = int(oct(permissoes)[-1]) #Pega apenas o último digito (o do usuário) 
+                #print(permissoesUsuario)
             # Se o tipo do arquivo visto for "diretório" entra nele e refaz o processo recursivamente para todos os arquivos do sistema até se ter a árvore completa
             if(tipoNum == 4 and nome != '.' and nome != '..'):
-                print(caminhoArquivoAtual)  
+                #print(caminhoArquivoAtual)  
             
                 try: 
-                    #O programa roda em modo usuário então só podemos entrar nele se o usuário tem permissão (o 3º dígito)
-                    if(permissoesUsuario != '0' and permissoesUsuario != '2' and permissoesUsuario != '4'):
-                        filhos.append(pega_arvore_diretorios(caminhoArquivoAtual)) 
+                    #O programa roda em modo usuário então só podemos entrar nele se o usuário tem permissão de leitura (numeros 4,5,6 e 7)
+                    if(permissoesUsuario >= 4 and nome != 'fdinfo' and nome != 'c'):
+                        filhos.append(pega_arvore_diretorios(caminhoArquivoAtual))  
                 except Exception as e:
                     print(f"Erro ao abrir o diretório: {e}")
                     continue    
@@ -293,7 +295,11 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
     finally:
         libc.closedir(pdir)  
 
+t1 = time.time()
 pega_arvore_diretorios("/")
+t2 = time.time()
+print(f"{t2-t1}s")
+
 #============================#
 #SEÇÃO DE TRATAMENTO DOS DADOS
 #============================#

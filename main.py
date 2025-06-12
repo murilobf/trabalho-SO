@@ -8,9 +8,9 @@ from queue import Queue
 #Se comunicam no sentido coleta > tratamento > interface
     
 #Fila coleta-tratamento
-filaCT = Queue()
+filaCT = Queue(1)
 #Fila tratamento-interface
-filaTI = Queue()
+filaTI = Queue(1)
 
 #Funções que serão chamadas nas threads
 
