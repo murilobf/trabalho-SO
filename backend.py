@@ -18,7 +18,7 @@ class Dirent(ctypes.Structure):
     ]
 
 #Classe usada para guardar algumas informações a mais sobre o arquivo, principalmente usuário, permissões e tamanho
-class Stat(ctypes.Structure):
+class Stat(ctypes.Structure): # https://man7.org/linux/man-pages/man3/stat.3type.html mais informações
     _fields_ = [
         ("st_dev", ctypes.c_ulong),
         ("st_ino", ctypes.c_ulong),
@@ -26,9 +26,10 @@ class Stat(ctypes.Structure):
         ("st_mode", ctypes.c_uint), # permissões
         ("st_uid", ctypes.c_uint),
         ("st_gid", ctypes.c_uint),
-        ("__pad", ctypes.c_byte * 256),  # para evitar ler além dos limites, se tirar dá segmentation fault
+        ("__pad0", ctypes.c_byte * 256),  # para evitar ler além dos limites, se tirar dá segmentation fault
         ("st_rdev", ctypes.c_ulong),
         ("st_size", ctypes.c_long),  # tamanho do arquivo
+        
     ]
 
 # Os tipos de arquivo definidos por d_type na classe Dirent, é mais prático definir na mão do que extrair do dirent.h do linux
@@ -255,26 +256,39 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
 
             # Pega o nome da pasta, usaremos isso para verificar se o arquivo é ou nãp um processo
             nome = diretorio.contents.d_name.decode("utf-8")
-            tipoNum = diretorio.contents.d_type
-            tipoNome = TIPOS.get(tipoNum)
+            tipoNum = diretorio.contents.d_type # O linux guarda o tipo de arquivo como um número. Consultar o dicionário no começo do arquivo para saber o que cada um significa
+            tipoNome = TIPOS.get(tipoNum) # Pega o nome do tipo guardado com base no número
             caminhoArquivoAtual = caminho + '/' + nome
-            
-            # Se o tipo do arquivo visto for "diretório" entra nele e refaz o processo recursivamente para todos os arquivos do sistema até se ter a árvore completa
-            if(tipoNum == 4 and nome != '.' and nome != '..'):
-                print(caminhoArquivoAtual)
-                filhos.append(pega_arvore_diretorios(caminhoArquivoAtual))
             
             if libc.stat(caminhoArquivoAtual.encode('utf-8'), ctypes.byref(stat)) == 0:
                 tamanho = stat.st_size
-                permissoes = stat.st_mode
-            else:
-                print("Erro ao coletar dados do stat")
+                permissoes = stat.st_mode & 0o777 #O valor é retornado em decimal mas o que importa pra gente é o valor em octal. Então precisamos converter.
+                #Pegamos apenas os 3 últimos digitos (que são os que guardam as permissões), para isso serve o bitwise AND (&) 0o777. oct retorna uma string então precisamos converter pra int
+                permissoesUsuario = oct(permissoes)[-1] #Pega apenas o último digito (o do usuário) 
+                print(permissoesUsuario)
+            # Se o tipo do arquivo visto for "diretório" entra nele e refaz o processo recursivamente para todos os arquivos do sistema até se ter a árvore completa
+            if(tipoNum == 4 and nome != '.' and nome != '..'):
+                print(caminhoArquivoAtual)  
+            
+                try: 
+                    #O programa roda em modo usuário então só podemos entrar nele se o usuário tem permissão (o 3º dígito)
+                    if(permissoesUsuario != '0' and permissoesUsuario != '2' and permissoesUsuario != '4'):
+                        filhos.append(pega_arvore_diretorios(caminhoArquivoAtual)) 
+                except Exception as e:
+                    print(f"Erro ao abrir o diretório: {e}")
+                    continue    
+                        
+             # https://stackoverflow.com/questions/35375084/c-unix-how-to-extract-the-bits-from-st-mode como pegar a permissão
+           
+                #print(f"Erro ao coletar dados do stat em {caminho}")
 
             no.adicionaInformacoes(nome, tipoNum, tipoNome, tamanho, permissoes, filhos)
+            #print(f"Nome: {no.nome}\n Tipo: {no.tipoNum} - {no.tipoNome} \n Tamanho: {no.tamanho} \n Permissões: {no.permissoes}")
     
     #Apenas para fim de debug/evitar do código quebrar mesmo quando se encontra algum problema
     except Exception as e:
         print(f"Erro ao abrir o diretório: {e}")
+    
     # Ao final, fecha o diretório
     finally:
         libc.closedir(pdir)  
