@@ -248,6 +248,10 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
         while True:
             no = NoArquivo()
             stat = Stat()
+
+            #As variaveis são inicializadas aqui pra evitar erros de serem acessadas mas não inicialiazadas, o que gera problemas de otimização pelas exceções geradas
+            tamanho = 0
+            permissoes = ""
             
             # Pega um ponteiro para o próximo diretório
             diretorio = libc.readdir(pdir)

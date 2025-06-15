@@ -11,6 +11,8 @@ from queue import Queue
 filaCT = Queue(1)
 #Fila tratamento-interface
 filaTI = Queue(1)
+#Fila arvore-interface
+filaAI = Queue(1)
 
 #Funções que serão chamadas nas threads
 
@@ -22,6 +24,13 @@ def loop_de_coleta():
         filaCT.put(auxSistema)
         
         time.sleep(1)
+
+def loop_arvore_diretorio():
+    while True:
+
+        auxArvore = backend.pega_arvore_diretorios()
+        filaAI.put(auxArvore)
+
 
 #Responsável pelo "tratamento" dos dados (cálculos e quaisquer outras possíveis necessidades futuras)
 def loop_de_tratamento():   

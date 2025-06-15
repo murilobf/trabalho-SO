@@ -136,3 +136,7 @@ class NoArquivo:
         self.tamanho = tamanho
         self.permissoes = permissoes
         self.filhos = filhos
+
+    def retornaStringInformacoes(self):
+        return f"Nome: {self.nome} | Tipo: {self.tipoNome} | Tamanho: {self.tamanho} | Permissões: {self.permissoes}" 
+

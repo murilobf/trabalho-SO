@@ -215,3 +215,27 @@ class Dashboard(tk.Tk):
         # Preenche com as threads
         for thread in processo.threads:
             tk.Label(scrollable_frame, text=f"TID: {thread.tid} | Nome: {thread.nomeThread} | Estado: {thread.estadoThread} |").pack(anchor='w', padx=10)
+
+    def mostraArvore(self, diretorio: classes.NoArquivo):
+        #Pega o índice equivalente ao processo da lista de diretorios clicada pelo usuário
+        indice = selecao[0]
+        diretorioSelecionado = self.diretorio.filhos[indice]
+
+        #Visualização do sistema de diretório, ela deve ficar separada e não junto da construção do resto pois a chamamos recursivamente
+        #ttk.Label(frameProcessos, text="Processos em Execução", font=("Helvetica", 12)).pack(pady=5)
+        frameArvore = ttk.Frame()
+        listaDiretorios = tk.Listbox(frameArvore, width=60)
+        listaDiretorios.pack(fill=tk.BOTH, expand=True)
+        # Binda um evento (no caso, chamar a função mostra_detalhes_processo) aos elementos da lista de processos
+        listaDiretorios.bind("<<ListboxSelect>>", lambda e: self.mostraArvore(diretorioSelecionado))
+        
+
+        for arquivo in diretorio.filhos:
+            listaDiretorios.insert(tk.END, arquivo.retornaStringInformacoes())  
+
+        selecao = self.listaDiretorios.curselection()
+        if not selecao:
+            return
+
+        
+
