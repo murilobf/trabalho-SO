@@ -99,7 +99,7 @@ class Dashboard(tk.Tk):
         self.listaDiretorios.bind("<<ListboxSelect>>", self.mostra_arvore)
 
         self.atualiza_interface(filaTI)
-        
+
     #Chama as funções que vão atualizar o dashboard
     def atualiza_interface(self, filaTI: Queue):
         
@@ -130,6 +130,9 @@ class Dashboard(tk.Tk):
 
     #Atualia a lista de processos
     def atualiza_processos(self, sistema: classes.Sistema):
+        #Salva a posição y que o usuário está na rolagem. 
+        #Precisamos fazer isso pois deletamos toda a lista para reconstruir. Nisso, o usuário é enviado para o topo da lista mesmo que estivesse abaixo.
+        scroll_pos = self.listaProcessos.yview()
         #Pega todos os elementos atualmente na lista de processos do objeto sistema
         self.listaObjetosProcessos = sistema.retorna_processos()
 
@@ -138,6 +141,9 @@ class Dashboard(tk.Tk):
         #Imprime os elementos dessa lista
         for processo in self.listaObjetosProcessos:
             self.listaProcessos.insert(tk.END, processo.retorna_string_dados())
+
+        #Move o usuário para a posição que estava anteriormente
+        self.listaProcessos.yview_moveto(scroll_pos[0])
 
     #Atualiza os gráficos de uso de memória e CPU
     def atualiza_grafico(self, sistema: classes.Sistema):
