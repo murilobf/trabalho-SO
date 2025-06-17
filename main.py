@@ -28,8 +28,8 @@ def loop_de_coleta():
 def loop_arvore_diretorio():
     while True:
 
-        auxArvore = backend.pega_arvore_diretorios()
-        filaAI.put(auxArvore)
+        auxRaiz = backend.pega_arvore_diretorios()
+        filaAI.put(auxRaiz)
 
 
 #Responsável pelo "tratamento" dos dados (cálculos e quaisquer outras possíveis necessidades futuras)
@@ -42,6 +42,16 @@ def loop_de_tratamento():
         backend.calcula_processador_ocioso(auxSistema)
         filaTI.put(auxSistema)
 
+###########################
+#TEMPORÁRIO RETIRAR DEPOIS# 
+#!!!!!!!!!!!!!!!!!!!!!!!!!#
+raiz = backend.pega_arvore_diretorios("/")
+filaAI.put(raiz)
+print(raiz)
+#iiiiiiiiiiiiiiiiiiiiiiiii#
+#TEMPORÁRIO RETIRAR DEPOIS# 
+###########################
+
 #=========================#
 #PARTE PRINCIPAL DO CÓDIGO#
 #=========================#
@@ -52,5 +62,5 @@ threadColeta.start()
 threadTratamento.start()
 
 #Interface
-app = frontend.Dashboard(filaTI)
+app = frontend.Dashboard(filaTI, filaAI)
 app.mainloop()

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from queue import Queue
 
 class Dashboard(tk.Tk):
-    def __init__(self, filaTI: Queue):
+    def __init__(self, filaTI: Queue, filaAI: Queue):
         super().__init__()
         self.title("Gerenciador de Tarefas 0.5v")
         self.geometry("900x500")
@@ -91,12 +91,23 @@ class Dashboard(tk.Tk):
         self.canvasCpu = FigureCanvasTkAgg(self.figCpu, master=frameGraficoCpu)
         self.canvasCpu.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
+        #Frame pra árvore de diretórios
         self.frameArvore = ttk.Frame(self.aba_diretorios)
         self.frameArvore.pack(fill=tk.BOTH, expand=True)
-        ttk.Label(self.frameArvore, text="Navegador de Arquivos", font=("Helvetica", 12)).pack(pady=5)
-        self.listaDiretorios = tk.Listbox(self.frameArvore, width=60)
-        self.listaDiretorios.pack(fill=tk.BOTH, expand=True)
-        self.listaDiretorios.bind("<<ListboxSelect>>", self.mostra_arvore)
+        
+        #A árvore em si
+        self.arvoreDiretorios = ttk.Treeview(self.frameArvore, columns=("tipo", "tamanho", "permissoes"), show="tree headings")
+        self.arvoreDiretorios.heading("#0", text="Nome")
+        self.arvoreDiretorios.heading("tipo", text="Tipo")
+        self.arvoreDiretorios.heading("tamanho", text="Tamanho")
+        self.arvoreDiretorios.heading("permissoes", text="Permissões")
+
+        self.arvoreDiretorios.pack(fill=tk.BOTH, expand=True)
+
+        print('chegou')
+        raiz = filaAI.get()
+        print(raiz)
+        self.preencher_arvore("",raiz)
 
         self.atualiza_interface(filaTI)
 
@@ -224,7 +235,7 @@ class Dashboard(tk.Tk):
         for thread in processo.threads:
             tk.Label(scrollable_frame, text=f"TID: {thread.tid} | Nome: {thread.nomeThread} | Estado: {thread.estadoThread} |").pack(anchor='w', padx=10)
 
-    def mostra_arvore(self, diretorio: classes.NoArquivo):
+    '''def mostra_arvore(self, diretorio: classes.NoArquivo):
         #Pega o índice equivalente ao processo da lista de diretorios clicada pelo usuário
         selecao = self.listaDiretorios.curselection()
         if not selecao:
@@ -244,8 +255,23 @@ class Dashboard(tk.Tk):
         
         listaDiretorios.delete(0, tk.END)
         for arquivo in diretorio.filhos:
-            listaDiretorios.insert(tk.END, arquivo.retornaStringInformacoes())  
+            listaDiretorios.insert(tk.END, arquivo.retornaStringInformacoes())  '''
+    
+    def preencher_arvore(self, pai, no: classes.NoArquivo):
+        id_item = self.arvoreDiretorios.insert(
+            pai,
+            "end",
+            text=no.nome,
+            values=(no.tipoNome, no.tamanho, no.permissoes)
+        )
+        
+        for filho in no.filhos:
+            self.preencher_arvore(id_item, filho)
 
+    def atualizar_arvore(self):
+        self.arvoreDiretorios.delete(*self.arvoreDiretorios.get_children())
+        if hasattr(self, 'raiz_atual'):
+            self.preencher_arvore("", self.raiz_atual)
 
         
 

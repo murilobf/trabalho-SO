@@ -241,12 +241,15 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
     # Ponteiro pro diretório específicado
     pdir = libc.opendir(caminhoBytes)
 
+    #O nó pai, o diretório atual
+    no = NoArquivo()
+
     # Arquivos dentro do diretório (se existirem)
     filhos = []
     try:
         # Acessa os diretórios enquanto existir um próximo
         while True:
-            no = NoArquivo()
+           
             stat = Stat()
 
             #As variaveis são inicializadas aqui pra evitar erros de serem acessadas mas não inicialiazadas, o que gera problemas de otimização pelas exceções geradas
@@ -274,7 +277,7 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
                 #print(permissoesUsuario)
             # Se o tipo do arquivo visto for "diretório" entra nele e refaz o processo recursivamente para todos os arquivos do sistema até se ter a árvore completa
             if(tipoNum == 4 and nome != '.' and nome != '..'):
-                #print(caminhoArquivoAtual)  
+                print(caminhoArquivoAtual)  
             
                 try: 
                     #O programa roda em modo usuário então só podemos entrar nele se o usuário tem permissão de leitura (numeros 4,5,6 e 7)
@@ -299,11 +302,13 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
     finally:
         libc.closedir(pdir)  
 
+    return no
+
 '''t1 = time.time()
 pega_arvore_diretorios("/")
 t2 = time.time()
-print(f"{t2-t1}s")'''
-
+print(f"{t2-t1}s")
+'''
 #============================#
 #SEÇÃO DE TRATAMENTO DOS DADOS
 #============================#
