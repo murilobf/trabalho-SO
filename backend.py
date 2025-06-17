@@ -299,10 +299,10 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
     finally:
         libc.closedir(pdir)  
 
-t1 = time.time()
+'''t1 = time.time()
 pega_arvore_diretorios("/")
 t2 = time.time()
-print(f"{t2-t1}s")
+print(f"{t2-t1}s")'''
 
 #============================#
 #SEÇÃO DE TRATAMENTO DOS DADOS

@@ -10,15 +10,23 @@ class Dashboard(tk.Tk):
         super().__init__()
         self.title("Gerenciador de Tarefas 0.5v")
         self.geometry("900x500")
-        #self.barreira = barreira
+
+        self.notebook = ttk.Notebook(self)
+        self.notebook.pack(fill="both", expand=True)
+
+        # Aba principal
+        self.aba_principal = ttk.Frame(self.notebook)
+        self.notebook.add(self.aba_principal, text="Dashboard")
+
+        # Aba da árvore de diretórios
+        self.aba_diretorios = ttk.Frame(self.notebook)
+        self.notebook.add(self.aba_diretorios, text="Sistema de Arquivos")
 
         # FRAME: Dados globais do sistema
-        # Seria a "div" externa, tem o título 
-        frameSistema = ttk.Frame(self)
-        frameSistema.pack(side=tk.TOP, fill=tk.X, expand=False, padx=5, pady=5) 
+        frameSistema = ttk.Frame(self.aba_principal)
+        frameSistema.pack(side=tk.TOP, fill=tk.X, expand=False, padx=5, pady=5)
         ttk.Label(frameSistema, text="Dados do Sistema", font=("Helvetica, 12")).pack(pady=5)
 
-        # Guarda os frames de dados
         frameDadosCpuSistema = ttk.Frame(frameSistema)
         frameDadosCpuSistema.pack(fill=tk.X, pady=5)
         frameDadosMemSistema = ttk.Frame(frameSistema)
@@ -26,16 +34,13 @@ class Dashboard(tk.Tk):
         frameDadosOutrosSistema = ttk.Frame(frameSistema)
         frameDadosOutrosSistema.pack(fill=tk.X, pady=5)
 
-        # Os frames abaixos são os dados propriamente ditos
-        # Esses se referem aos dados de CPU
         self.dadoSistemaCpuUsado = tk.Label(frameDadosCpuSistema, text="")
         self.dadoSistemaCpuUsado.pack(side=tk.LEFT, padx=10)
         self.dadoSistemaCpuLivre = tk.Label(frameDadosCpuSistema, text="")
         self.dadoSistemaCpuLivre.pack(side=tk.LEFT, padx=10)
         self.dadoSistemaCpuOcioso = tk.Label(frameDadosCpuSistema, text="")
-        self.dadoSistemaCpuOcioso.pack(side=tk.LEFT,padx=10)
+        self.dadoSistemaCpuOcioso.pack(side=tk.LEFT, padx=10)
 
-        #Esses se referem aos dados de memória
         self.dadoSistemaMemLivre = tk.Label(frameDadosMemSistema, text="")
         self.dadoSistemaMemLivre.pack(side=tk.LEFT, padx=10)
         self.dadoSistemaMemTotal = tk.Label(frameDadosMemSistema, text="")
@@ -45,38 +50,29 @@ class Dashboard(tk.Tk):
         self.dadoSistemaMemLivrePer = tk.Label(frameDadosMemSistema, text="")
         self.dadoSistemaMemLivrePer.pack(side=tk.LEFT, padx=10)
 
-        #Esses se referem a outros dados que até se encaixam nos critérios acima, mas que por estética estão separados
         self.dadoSistemaMemVirtual = tk.Label(frameDadosOutrosSistema, text="")
         self.dadoSistemaMemVirtual.pack(side=tk.LEFT, padx=10)
-        
-        # Dados adicionais: quantidade de processos e threads
         self.dadoSistemaQtdProcessos = tk.Label(frameDadosOutrosSistema, text="")
         self.dadoSistemaQtdProcessos.pack(side=tk.LEFT, padx=10)
-
         self.dadoSistemaQtdThreads = tk.Label(frameDadosOutrosSistema, text="")
         self.dadoSistemaQtdThreads.pack(side=tk.LEFT, padx=10)
 
-        # FRAME: Lista de processos
-        frameProcessos = ttk.Frame(self)
+        frameProcessos = ttk.Frame(self.aba_principal)
         frameProcessos.pack(side=tk.LEFT, fill=tk.BOTH, expand=False, padx=10, pady=10)
-
         ttk.Label(frameProcessos, text="Processos em Execução", font=("Helvetica", 12)).pack(pady=5)
         self.listaProcessos = tk.Listbox(frameProcessos, width=60)
         self.listaProcessos.pack(fill=tk.BOTH, expand=True)
-        # Binda um evento (no caso, chamar a função mostra_detalhes_processo) aos elementos da lista de processos
         self.listaProcessos.bind("<<ListboxSelect>>", self.mostra_detalhes_processo)
 
-        # FRAME: Gráficos
-        frameGraficoMemoria = ttk.Frame(self)
+        frameGraficoMemoria = ttk.Frame(self.aba_principal)
         frameGraficoMemoria.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-        frameGraficoCpu = ttk.Frame(self)
+        frameGraficoCpu = ttk.Frame(self.aba_principal)
         frameGraficoCpu.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         self.dadosMemoria = []
         self.dadosCpu = []
         self.listaObjetosProcessos = []
 
-        # Gráfico de uso de memória
         self.figMem, self.axMem = plt.subplots(figsize=(5, 3))
         self.axMem.set_title("Uso de Memória (%)")
         self.axMem.set_ylim(0, 100)
@@ -86,7 +82,6 @@ class Dashboard(tk.Tk):
         self.canvasMem = FigureCanvasTkAgg(self.figMem, master=frameGraficoMemoria)
         self.canvasMem.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-        # Gráfico de uso de CPU
         self.figCpu, self.axCpu = plt.subplots(figsize=(5, 3))
         self.axCpu.set_title("Uso de CPU (%)")
         self.axCpu.set_ylim(0, 100)
@@ -96,8 +91,15 @@ class Dashboard(tk.Tk):
         self.canvasCpu = FigureCanvasTkAgg(self.figCpu, master=frameGraficoCpu)
         self.canvasCpu.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-        self.atualiza_interface(filaTI)
+        self.frameArvore = ttk.Frame(self.aba_diretorios)
+        self.frameArvore.pack(fill=tk.BOTH, expand=True)
+        ttk.Label(self.frameArvore, text="Navegador de Arquivos", font=("Helvetica", 12)).pack(pady=5)
+        self.listaDiretorios = tk.Listbox(self.frameArvore, width=60)
+        self.listaDiretorios.pack(fill=tk.BOTH, expand=True)
+        self.listaDiretorios.bind("<<ListboxSelect>>", self.mostra_arvore)
 
+        self.atualiza_interface(filaTI)
+        
     #Chama as funções que vão atualizar o dashboard
     def atualiza_interface(self, filaTI: Queue):
         
@@ -216,26 +218,28 @@ class Dashboard(tk.Tk):
         for thread in processo.threads:
             tk.Label(scrollable_frame, text=f"TID: {thread.tid} | Nome: {thread.nomeThread} | Estado: {thread.estadoThread} |").pack(anchor='w', padx=10)
 
-    def mostraArvore(self, diretorio: classes.NoArquivo):
+    def mostra_arvore(self, diretorio: classes.NoArquivo):
         #Pega o índice equivalente ao processo da lista de diretorios clicada pelo usuário
-        indice = selecao[0]
-        diretorioSelecionado = self.diretorio.filhos[indice]
-
-        #Visualização do sistema de diretório, ela deve ficar separada e não junto da construção do resto pois a chamamos recursivamente
-        #ttk.Label(frameProcessos, text="Processos em Execução", font=("Helvetica", 12)).pack(pady=5)
-        frameArvore = ttk.Frame()
-        listaDiretorios = tk.Listbox(frameArvore, width=60)
-        listaDiretorios.pack(fill=tk.BOTH, expand=True)
-        # Binda um evento (no caso, chamar a função mostra_detalhes_processo) aos elementos da lista de processos
-        listaDiretorios.bind("<<ListboxSelect>>", lambda e: self.mostraArvore(diretorioSelecionado))
-        
-
-        for arquivo in diretorio.filhos:
-            listaDiretorios.insert(tk.END, arquivo.retornaStringInformacoes())  
-
         selecao = self.listaDiretorios.curselection()
         if not selecao:
             return
+            
+        indice = selecao[0]
+        diretorioSelecionado = self.diretorio.filhos[indice]
+        
+
+        #Visualização do sistema de diretório, ela deve ficar separada e não junto da construção do resto pois a chamamos recursivamente
+        frameArvore = ttk.Frame()
+        ttk.Label(frameArvore, text=f"{diretorioSelecionado.nome}", font=("Helvetica", 12)).pack(pady=5)
+        listaDiretorios = tk.Listbox(frameArvore, width=60)
+        listaDiretorios.pack(fill=tk.BOTH, expand=True)
+        # Binda um evento (no caso, chamar a função mostra_arvore) aos elementos da lista de diretorios
+        listaDiretorios.bind("<<ListboxSelect>>", lambda e: self.mostra_arvore(diretorioSelecionado))
+        
+        listaDiretorios.delete(0, tk.END)
+        for arquivo in diretorio.filhos:
+            listaDiretorios.insert(tk.END, arquivo.retornaStringInformacoes())  
+
 
         
 
