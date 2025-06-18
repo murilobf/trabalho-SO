@@ -26,9 +26,9 @@ class Stat(ctypes.Structure): # https://man7.org/linux/man-pages/man3/stat.3type
         ("st_mode", ctypes.c_uint), # permissões
         ("st_uid", ctypes.c_uint),
         ("st_gid", ctypes.c_uint),
-        ("__pad0", ctypes.c_byte * 256),  # para evitar ler além dos limites, se tirar dá segmentation fault
         ("st_rdev", ctypes.c_ulong),
         ("st_size", ctypes.c_long),  # tamanho do arquivo
+        ("__pad0", ctypes.c_byte * 256),  # para evitar ler além dos limites, se tirar dá segmentation fault
         
     ]
 
@@ -231,78 +231,118 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
 
     return processosRetorno
 
-# Função para montar a árvore de diretórios do sistema, de um tanto parecida com a função pega_ids
-import time
+# Função para transformar as permissões que temos no formato de número (ex 705) para um formato legível pelo usuário (ex rwx---r-x)
+# 4 = leitura(r); 2 = escrita(w); 1 = execução(x). Os outros números são somas desses 3.
+def permissoes_para_string(permissoes: int):
+    permissoesString = ""
+    digitos = []
 
+    # Separa cada caractere de permissoes já que cada um representa níveis diferentes de permissão (na ordem root-grupo-usuário)
+    
+    while permissoes > 0:
+        digitos.append(permissoes % 10)
+        permissoes = permissoes // 10
 
+    # Como append coloca no fim da lista e começamos pegando do elemento pelo número mais baixo, temos que inverter a lista
+    digitos.reverse()
+
+    for digito in digitos:
+        if((digito - 4) >= 0):
+            permissoesString += 'r'
+            digito -= 4
+        else:
+            permissoesString += '-'
+
+        if((digito - 2) >= 0):
+            permissoesString += 'w'
+            digito -= 2
+        else:
+            permissoesString += '-'
+
+        if((digito - 1) >= 0):
+            permissoesString += 'x'
+            digito -= 1
+        else:
+            permissoesString += '-'
+
+    return permissoesString
+            
+
+# Função para montar a árvore de diretórios do sistema, baseada na função pega_ids
 def pega_arvore_diretorios(caminho: str) -> NoArquivo:
-    #O opendir não aceita uma variável do tipo str, tem que converter usando a função abaixo para que seja um char*
     caminhoBytes = caminho.encode('utf-8')
-    # Ponteiro pro diretório específicado
     pdir = libc.opendir(caminhoBytes)
 
-    #O nó pai, o diretório atual
     no = NoArquivo()
+    stat_dir = Stat()
 
-    # Arquivos dentro do diretório (se existirem)
-    filhos = []
+    #Pega informações sobre o diretório atual
+    if libc.stat(caminhoBytes, ctypes.byref(stat_dir)) == 0:
+        tamanho = stat_dir.st_size
+        permissoes = int(oct(stat_dir.st_mode & 0o777)[2:])
+        stringPermissoes = permissoes_para_string(permissoes)
+        tipoNum = 4  # diretório
+        tipoNome = TIPOS.get(tipoNum, "desconhecido")
+        nome = caminho.split('/')[-1] if caminho != '/' else '/'
+
+        no.adicionaInformacoes(nome, tipoNum, tipoNome, tamanho, stringPermissoes, [])
+    else:
+        print(f"Erro ao coletar dados do diretório {caminho}")
+        return no  # retorna o nó vazio mesmo se não conseguir o stat
+
+    #Pega informações sobre todos os filhos do diretório
     try:
-        # Acessa os diretórios enquanto existir um próximo
         while True:
-           
             stat = Stat()
-
-            #As variaveis são inicializadas aqui pra evitar erros de serem acessadas mas não inicialiazadas, o que gera problemas de otimização pelas exceções geradas
             tamanho = 0
             permissoes = ""
-            
-            # Pega um ponteiro para o próximo diretório
+            permissoesUsuario = 0
+
             diretorio = libc.readdir(pdir)
-            
-            # Se o atual não for um diretório ele não existe. Quebra o loop
             if not diretorio:
                 break
 
-            # Pega o nome da pasta, usaremos isso para verificar se o arquivo é ou nãp um processo
             nome = diretorio.contents.d_name.decode("utf-8")
-            tipoNum = diretorio.contents.d_type # O linux guarda o tipo de arquivo como um número. Consultar o dicionário no começo do arquivo para saber o que cada um significa
-            tipoNome = TIPOS.get(tipoNum) # Pega o nome do tipo guardado com base no número
-            caminhoArquivoAtual = caminho + '/' + nome
-            
+            tipoNum = diretorio.contents.d_type
+            tipoNome = TIPOS.get(tipoNum)
+            caminhoArquivoAtual = caminho + '/' + nome if caminho != '/' else '/' + nome
+
+            #Ignora as pastas do próprio arquivo (.) e do do arquivo anterior (..)
+            if nome in ['.', '..']:
+                continue
+
             if libc.stat(caminhoArquivoAtual.encode('utf-8'), ctypes.byref(stat)) == 0:
                 tamanho = stat.st_size
-                permissoes = stat.st_mode & 0o777 #O valor é retornado em decimal mas o que importa pra gente é o valor em octal. Então precisamos converter.
-                #Pegamos apenas os 3 últimos digitos (que são os que guardam as permissões), para isso serve o bitwise AND (&) 0o777. oct retorna uma string então precisamos converter pra int
-                permissoesUsuario = int(oct(permissoes)[-1]) #Pega apenas o último digito (o do usuário) 
-                #print(permissoesUsuario)
-            # Se o tipo do arquivo visto for "diretório" entra nele e refaz o processo recursivamente para todos os arquivos do sistema até se ter a árvore completa
-            if(tipoNum == 4 and nome != '.' and nome != '..'):
-                print(caminhoArquivoAtual)  
-            
-                try: 
-                    #O programa roda em modo usuário então só podemos entrar nele se o usuário tem permissão de leitura (numeros 4,5,6 e 7)
-                    if(permissoesUsuario >= 4 and nome != 'fdinfo' and nome != 'c'):
-                        filhos.append(pega_arvore_diretorios(caminhoArquivoAtual))  
+                permissoes = int(oct(stat.st_mode & 0o777)[2:]) #Esse bando de coisa basicamente pega apenas os elementos úteis de st_mode e os torna um int
+                permissoesUsuario = (permissoes % 10) #Pega só o último elemento
+                stringPermissoes = permissoes_para_string(permissoes)
+                
+            # O tipo de arquivo ser 4 indica um diretório. Navega ele se possível.
+            # Não coletamos informações aqui pois, ao chamar recursivamente a função para o diretório, teremos as informações no começo ao começo
+            if tipoNum == 4:
+                try:
+                    # Permissão 4, 5, 6 ou 7 indica que podemos ler aquela pasta.
+                    # O sistema diz que temos permissão para ler fdinfo mas ao tentar acessar vemos que não temos de verdade, temos mas não temos, por isso evitamos.
+                    # c é a pasta que o ponto de acesso do wsl para o diretório do windows, ignoramos pois não queremos a pasta do windows, apenas do linux.
+                    if permissoesUsuario >= 4 and nome not in ['fdinfo', 'c']:
+                        filho = pega_arvore_diretorios(caminhoArquivoAtual)
+                        no.filhos.append(filho)
                 except Exception as e:
-                    print(f"Erro ao abrir o diretório: {e}")
-                    continue    
-                        
-             # https://stackoverflow.com/questions/35375084/c-unix-how-to-extract-the-bits-from-st-mode como pegar a permissão
-           
-                #print(f"Erro ao coletar dados do stat em {caminho}")
+                    print(f"Erro ao abrir o diretório {caminhoArquivoAtual}: {e}")
+                    continue
+            # Se não for diretório só pega informações sobre ele
+            else:
+                filho = NoArquivo()
+                filho.adicionaInformacoes(nome, tipoNum, tipoNome, tamanho, stringPermissoes, [])
+                no.filhos.append(filho)
 
-            no.adicionaInformacoes(nome, tipoNum, tipoNome, tamanho, permissoes, filhos)
-            #print(f"Nome: {no.nome}\n Tipo: {no.tipoNum} - {no.tipoNome} \n Tamanho: {no.tamanho} \n Permissões: {no.permissoes}")
-    
-    #Apenas para fim de debug/evitar do código quebrar mesmo quando se encontra algum problema
     except Exception as e:
         print(f"Erro ao abrir o diretório: {e}")
-    
-    # Ao final, fecha o diretório
     finally:
-        libc.closedir(pdir)  
+        libc.closedir(pdir)
 
     return no
+
 
 '''t1 = time.time()
 pega_arvore_diretorios("/")
