@@ -28,8 +28,7 @@ class Stat(ctypes.Structure): # https://man7.org/linux/man-pages/man3/stat.3type
         ("st_gid", ctypes.c_uint),
         ("st_rdev", ctypes.c_ulong),
         ("st_size", ctypes.c_long),  # tamanho do arquivo
-        ("__pad0", ctypes.c_byte * 256),  # para evitar ler além dos limites, se tirar dá segmentation fault
-        
+        ("__pad0", ctypes.c_byte * 256),  # para evitar ler além dos limites, se tirar dá segmentation fault   
     ]
 
 # Os tipos de arquivo definidos por d_type na classe Dirent, é mais prático definir na mão do que extrair do dirent.h do linux
@@ -343,12 +342,6 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
 
     return no
 
-
-'''t1 = time.time()
-pega_arvore_diretorios("/")
-t2 = time.time()
-print(f"{t2-t1}s")
-'''
 #============================#
 #SEÇÃO DE TRATAMENTO DOS DADOS
 #============================#

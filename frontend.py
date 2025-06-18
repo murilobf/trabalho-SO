@@ -104,9 +104,7 @@ class Dashboard(tk.Tk):
 
         self.arvoreDiretorios.pack(fill=tk.BOTH, expand=True)
 
-        print('chegou')
         raiz = filaAI.get()
-        print(raiz)
         self.preencher_arvore("",raiz)
 
         self.atualiza_interface(filaTI)
