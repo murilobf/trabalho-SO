@@ -232,6 +232,36 @@ class Dashboard(tk.Tk):
         # Preenche com as threads
         for thread in processo.threads:
             tk.Label(scrollable_frame, text=f"TID: {thread.tid} | Nome: {thread.nomeThread} | Estado: {thread.estadoThread} |").pack(anchor='w', padx=10)
+
+    # Função para guardar os nós abertos da árvore para quando ela for refeita abrí-los de novo, de forma que o usuário não perceba que a árvore foi substituída
+    def guarda_caminho_aberto(self):
+        expandidos = []
+
+        #Visita recursivamente todos os nós que estiverem abertos, guardando o id deles numa lista
+        def visitar(item_id):
+            if self.arvoreDiretorios.item(item_id, "open"):
+                expandidos.append(self.arvoreDiretorios.item(item_id, "text"))
+                for filho in self.arvoreDiretorios.get_children(item_id):
+                    visitar(filho)
+
+        #Visita o diretório ra raiz da arvore (no nosso caso ele visitaria o '/')
+        for root_id in self.arvoreDiretorios.get_children():
+            visitar(root_id)
+
+        return expandidos
+    
+    #Pega todos os nós expandidos guardados na lista de expandidos e os reexpande
+    def reexpande_caminho(self, expandidos):
+        def visitar(item_id):
+            nomeDiretorio = self.arvoreDiretorios.item(item_id, "text")
+            if nomeDiretorio in expandidos:
+                self.arvoreDiretorios.item(item_id, open=True)
+                for filho in self.arvoreDiretorios.get_children(item_id):
+                    visitar(filho)
+
+        #Começa pelos nó raiz ('/' no nosso caso)
+        for root_id in self.arvoreDiretorios.get_children():
+            visitar(root_id)
     
     def preenche_arvore(self, pai, no: classes.NoArquivo):
         id_item = self.arvoreDiretorios.insert(
@@ -245,15 +275,18 @@ class Dashboard(tk.Tk):
             self.preenche_arvore(id_item, filho)
 
     def atualiza_arvore(self, filaAI: Queue):
+        expandidos = self.guarda_caminho_aberto()
         raiz = filaAI.get()
         t1 = time.time()
+        #Deleta a árvore anterior e a recria
         self.arvoreDiretorios.delete(*self.arvoreDiretorios.get_children())
         self.preenche_arvore("", raiz)
         t2 = time.time()
 
+        #Reabre os nós expandidos anteriormente (se houver algum)
+        self.reexpande_caminho(expandidos)
         #Quanto tempo falta para o ciclo de 30s
         tempoFaltante = int(30 - (t2 - t1))
-        print(tempoFaltante)
 
         if(tempoFaltante > 0):
             #O tempo usado pelo after é em ms então fazemos a conversão
