@@ -33,7 +33,6 @@ def loop_arvore_diretorio():
         filaAI.put(auxRaiz)
         t2 = time.time()
         tempoFaltante = 30 - (t2 - t1)
-        print(tempoFaltante)
 
         #Se esse tempo for maior que 0, espera o tempo necessário para dar 30s, caso contrário, estamos atrasados, chama a função de novo imediatamente
         if(tempoFaltante > 0):

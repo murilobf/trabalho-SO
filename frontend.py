@@ -4,6 +4,7 @@ from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 from queue import Queue
+import time
 
 class Dashboard(tk.Tk):
     def __init__(self, filaTI: Queue, filaAI: Queue):
@@ -104,9 +105,8 @@ class Dashboard(tk.Tk):
 
         self.arvoreDiretorios.pack(fill=tk.BOTH, expand=True)
 
-        raiz = filaAI.get()
-        self.preencher_arvore("",raiz)
-
+        #A função da árvore está separada devido ao tempo que leva pra
+        self.atualiza_arvore(filaAI)
         self.atualiza_interface(filaTI)
 
     #Chama as funções que vão atualizar o dashboard
@@ -232,30 +232,8 @@ class Dashboard(tk.Tk):
         # Preenche com as threads
         for thread in processo.threads:
             tk.Label(scrollable_frame, text=f"TID: {thread.tid} | Nome: {thread.nomeThread} | Estado: {thread.estadoThread} |").pack(anchor='w', padx=10)
-
-    '''def mostra_arvore(self, diretorio: classes.NoArquivo):
-        #Pega o índice equivalente ao processo da lista de diretorios clicada pelo usuário
-        selecao = self.listaDiretorios.curselection()
-        if not selecao:
-            return
-            
-        indice = selecao[0]
-        diretorioSelecionado = self.diretorio.filhos[indice]
-        
-
-        #Visualização do sistema de diretório, ela deve ficar separada e não junto da construção do resto pois a chamamos recursivamente
-        frameArvore = ttk.Frame()
-        ttk.Label(frameArvore, text=f"{diretorioSelecionado.nome}", font=("Helvetica", 12)).pack(pady=5)
-        listaDiretorios = tk.Listbox(frameArvore, width=60)
-        listaDiretorios.pack(fill=tk.BOTH, expand=True)
-        # Binda um evento (no caso, chamar a função mostra_arvore) aos elementos da lista de diretorios
-        listaDiretorios.bind("<<ListboxSelect>>", lambda e: self.mostra_arvore(diretorioSelecionado))
-        
-        listaDiretorios.delete(0, tk.END)
-        for arquivo in diretorio.filhos:
-            listaDiretorios.insert(tk.END, arquivo.retornaStringInformacoes())  '''
     
-    def preencher_arvore(self, pai, no: classes.NoArquivo):
+    def preenche_arvore(self, pai, no: classes.NoArquivo):
         id_item = self.arvoreDiretorios.insert(
             pai,
             "end",
@@ -264,12 +242,25 @@ class Dashboard(tk.Tk):
         )
         
         for filho in no.filhos:
-            self.preencher_arvore(id_item, filho)
+            self.preenche_arvore(id_item, filho)
 
-    def atualizar_arvore(self):
+    def atualiza_arvore(self, filaAI: Queue):
+        raiz = filaAI.get()
+        t1 = time.time()
         self.arvoreDiretorios.delete(*self.arvoreDiretorios.get_children())
-        if hasattr(self, 'raiz_atual'):
-            self.preencher_arvore("", self.raiz_atual)
+        self.preenche_arvore("", raiz)
+        t2 = time.time()
 
+        #Quanto tempo falta para o ciclo de 30s
+        tempoFaltante = int(30 - (t2 - t1))
+        print(tempoFaltante)
+
+        if(tempoFaltante > 0):
+            #O tempo usado pelo after é em ms então fazemos a conversão
+            tempoFaltante *= 1000
         
+        #Chama a função imediatamente
+        else:
+            tempoFaltante = 0
 
+        self.after(tempoFaltante, self.atualiza_arvore, filaAI)
