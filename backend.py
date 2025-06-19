@@ -6,6 +6,10 @@ import ctypes.util
 # Uma interface pra permitir usar as funções da biblioteca c (o CDLL, junto do ctypes.util.find_library("c") pega a biblioteca de c para isso)
 libc = ctypes.CDLL(ctypes.util.find_library("c"))
 
+#Variáveis usadas para verificar a permissão do usuário que está rodando o programa em entrar nos diretórios 
+uid = libc.getuid()  
+gid = libc.getgid()
+
 #Classe usada pra guardar informações sobre arquivos  (usamos diretamente apenas o d_name, mas se tirar o resto para de funcionarkkkk)
 class Dirent(ctypes.Structure):
     _pack_ = 1
@@ -230,6 +234,20 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
 
     return processosRetorno
 
+# Função para verificar se o usuário que rodou o programa tem permissão para entrar nos diretórios
+def tem_permissao(uidArquivo, gidArquivo, permissoes) -> bool:
+    #Se o usuário atual é o dono do arquivo e ele pode ler ele tem permissão
+    if(uid == uidArquivo and int(permissoes[0]) >= 4):
+        return True
+    #Idem mas para os grupos
+    if(gid == gidArquivo and int(permissoes[1]) >= 4):
+        return True
+    #Idem mas para "outros"
+    if(int(permissoes[2]) >= 4):
+        return True
+    
+    return False
+
 # Função para transformar as permissões que temos no formato de número (ex 705) para um formato legível pelo usuário (ex rwx---r-x)
 # 4 = leitura(r); 2 = escrita(w); 1 = execução(x). Os outros números são somas desses 3.
 def permissoes_para_string(permissoes: int):
@@ -310,12 +328,14 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
             if nome in ['.', '..']:
                 continue
 
+            #A condição é pra verificar se podemos acessar o arquivo, retorna 0 se sim. Importante para ver se temos permissão ou se o arquivo ainda existe
             if libc.stat(caminhoArquivoAtual.encode('utf-8'), ctypes.byref(stat)) == 0:
                 tamanho = stat.st_size
                 permissoes = int(oct(stat.st_mode & 0o777)[2:]) #Esse bando de coisa basicamente pega apenas os elementos úteis de st_mode e os torna um int
-                permissoesUsuario = (permissoes % 10) #Pega só o último elemento
                 stringPermissoes = permissoes_para_string(permissoes)
-                
+                uidArquivo = stat.st_uid
+                gidArquivo = stat.st_gid
+
             # O tipo de arquivo ser 4 indica um diretório. Navega ele se possível.
             # Não coletamos informações aqui pois, ao chamar recursivamente a função para o diretório, teremos as informações no começo ao começo
             if tipoNum == 4:
@@ -323,7 +343,7 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
                     # Permissão 4, 5, 6 ou 7 indica que podemos ler aquela pasta.
                     # O sistema diz que temos permissão para ler fdinfo mas ao tentar acessar vemos que não temos de verdade, temos mas não temos, por isso evitamos.
                     # c é a pasta que o ponto de acesso do wsl para o diretório do windows, ignoramos pois não queremos a pasta do windows, apenas do linux.
-                    if permissoesUsuario >= 4 and nome not in ['fdinfo', 'c']:
+                    if(tem_permissao(uidArquivo,gidArquivo,str(permissoes)) and nome not in ['fdinfo', 'c']):
                         filho = pega_arvore_diretorios(caminhoArquivoAtual)
                         no.filhos.append(filho)
                 except Exception as e:
