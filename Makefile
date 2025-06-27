@@ -1,6 +1,6 @@
 # Roda o programa principal
 run:
-	python3 main.py
+	sudo python3 main.py
 
 # Instala todas as dependências listadas em requirements.txt
 install:

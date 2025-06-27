@@ -150,7 +150,7 @@ def coleta_infos_processo(pid) -> list:
     with open(f"/proc/{pid}/stat") as pasta:
         processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
         dadosProcessos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
-        
+        coleta_dados_IO(pid)
     return dadosProcessos
 
 # Pega o id do usuário que chamou o processo
@@ -162,6 +162,25 @@ def coleta_usuario_processo(pid: int) -> int:
         return stat.st_uid
     else:
         print("Erro ao coletar o usuário do processo")
+
+# Coleta dos dos dados de entrada e saída dos arquivos e processos
+def coleta_dados_IO(pid: int):
+    dadosIO = []
+    try:
+        with open(f"/proc/{pid}/io") as t:
+            linhas = t.readlines()
+            for linha in linhas:
+                if linha.startswith("rchar:"):
+                    dadosIO.append(linha.split()[1])
+                elif linha.startswith("wchar:"):
+                    dadosIO.append(linha.split()[1])
+                elif linha.startswith("syscr:"):
+                    dadosIO.append(linha.split()[1])
+                elif linha.startswith("syscw:"):
+                    dadosIO.append(linha.split()[1])
+                    print(f"{dadosIO}")
+    except PermissionError:
+        print("Erro de permissão de acesso")
 
 # Pega dados da memória
 def coleta_dados_memoria(pid: int):
