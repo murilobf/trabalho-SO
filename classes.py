@@ -70,7 +70,6 @@ class Processo:
         #Dados identificadores do processo (id, nome, usuário)
         self.pid = 0
         self.nome = ""
-        self.ppid = ""
         self.usuario = ""
         self.estado = ""
         self.prioridade = ""
@@ -112,6 +111,9 @@ class Processo:
 
     def retorna_string_dados(self):
         return f"ID: {self.pid} | Processo: {self.nome} | Usuário: {self.usuario} | Estado: {self.estado}"
+
+    def retorna_uid(self):
+        return self.usuario
 
 class Threads:
     def __init__(self, pid: int, tid: int, nomeThread: str, estado:str):

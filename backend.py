@@ -2,6 +2,7 @@ import time
 from classes import Processo, Sistema, Threads, NoArquivo
 import ctypes
 import ctypes.util
+import os
 
 # Uma interface pra permitir usar as funções da biblioteca c (o CDLL, junto do ctypes.util.find_library("c") pega a biblioteca de c para isso)
 libc = ctypes.CDLL(ctypes.util.find_library("c"))
@@ -138,7 +139,6 @@ def pega_sistema() -> Sistema:
 
     return sistemaRetorno
 
-
 # A seção abaixo coleta todos os processos do sistema e suas informações
 
 # Coleta alguns dados variados do sistema, no momento usado principalmente para pegar o nome do processo (o indice [1])
@@ -150,7 +150,7 @@ def coleta_infos_processo(pid) -> list:
     with open(f"/proc/{pid}/stat") as pasta:
         processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
         dadosProcessos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
-        coleta_dados_IO(pid)
+        coleta_dados_sockets(pid)
     return dadosProcessos
 
 # Pega o id do usuário que chamou o processo
@@ -178,9 +178,24 @@ def coleta_dados_IO(pid: int):
                     dadosIO.append(linha.split()[1])
                 elif linha.startswith("syscw:"):
                     dadosIO.append(linha.split()[1])
-                    print(f"{dadosIO}")
     except PermissionError:
-        print("Erro de permissão de acesso")
+        pass
+
+#Coleta os sockets do sistema
+def coleta_dados_sockets (pid: int):
+    dadosSockets = []
+
+    diretorios = pega_ids(f"/proc/{pid}/fdinfo")
+    for fd in diretorios:
+        try:
+            caminho = f"/proc/{pid}/fd/{fd}"
+            destino = os.readlink(caminho)
+            if destino.startswith("socket:["):
+                dadosSockets.append(destino)
+        except PermissionError:
+            continue
+        except FileNotFoundError:
+            continue
 
 # Pega dados da memória
 def coleta_dados_memoria(pid: int):
