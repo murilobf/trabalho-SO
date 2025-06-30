@@ -150,7 +150,7 @@ def coleta_infos_processo(pid) -> list:
     with open(f"/proc/{pid}/stat") as pasta:
         processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
         dadosProcessos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
-        coleta_dados_sockets(pid)
+        #coleta_dados_sockets(pid)
     return dadosProcessos
 
 # Pega o id do usuário que chamou o processo
@@ -279,7 +279,9 @@ def tem_permissao(uidArquivo, gidArquivo, permissoes) -> bool:
     #Idem mas para "outros"
     if(int(permissoes[2]) >= 4):
         return True
-    
+    #Idem mas para o root
+    if(uid == 0):
+        return True
     return False
 
 # Função para transformar as permissões que temos no formato de número (ex 705) para um formato legível pelo usuário (ex rwx---r-x)
@@ -330,15 +332,14 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
     #Pega informações sobre o diretório atual
     if libc.stat(caminhoBytes, ctypes.byref(stat_dir)) == 0:
         tamanho = stat_dir.st_size
-        permissoes = int(oct(stat_dir.st_mode & 0o777)[2:])
-        stringPermissoes = permissoes_para_string(permissoes)
+        permissoesDir = int(oct(stat_dir.st_mode & 0o777)[2:])
+        stringPermissoes = permissoes_para_string(permissoesDir)
         tipoNum = 4  # diretório
         tipoNome = TIPOS.get(tipoNum, "desconhecido")
-        nome = caminho.split('/')[-1] if caminho != '/' else '/'
-
-        no.adicionaInformacoes(nome, tipoNum, tipoNome, tamanho, stringPermissoes, [])
+        nomeDir = caminho.split('/')[-1] if caminho != '/' else '/'
+        no.adicionaInformacoes(nomeDir, tipoNum, tipoNome, tamanho, stringPermissoes, [])
     else:
-        print(f"Erro ao coletar dados do diretório {caminho}")
+        print(f"Erro ao coletar dados do diretóriiiiiiiiiiio {caminho}")
         return no  # retorna o nó vazio mesmo se não conseguir o stat
 
     #Pega informações sobre todos os filhos do diretório
@@ -347,13 +348,18 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
             stat = Stat()
             tamanho = 0
             permissoes = ""
-            permissoesUsuario = 0
+            permitido = False
 
             diretorio = libc.readdir(pdir)
             if not diretorio:
                 break
 
-            nome = diretorio.contents.d_name.decode("utf-8")
+            try:
+                nome = diretorio.contents.d_name.decode("utf-8").strip('\x00')
+            except Exception as e:
+                print(f"Erro ao decodificar nome em {caminho}: {e}")
+                continue
+            
             tipoNum = diretorio.contents.d_type
             tipoNome = TIPOS.get(tipoNum)
             caminhoArquivoAtual = caminho + '/' + nome if caminho != '/' else '/' + nome
@@ -369,17 +375,18 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
                 stringPermissoes = permissoes_para_string(permissoes)
                 uidArquivo = stat.st_uid
                 gidArquivo = stat.st_gid
+                permitido = True
 
             # O tipo de arquivo ser 4 indica um diretório. Navega ele se possível.
             # Não coletamos informações aqui pois, ao chamar recursivamente a função para o diretório, teremos as informações no começo ao começo
-            if tipoNum == 4:
+            if tipoNum == 4 and permitido:
                 try:
-                    # Permissão 4, 5, 6 ou 7 indica que podemos ler aquela pasta.
                     # O sistema diz que temos permissão para ler fdinfo mas ao tentar acessar vemos que não temos de verdade, temos mas não temos, por isso evitamos.
                     # c é a pasta que o ponto de acesso do wsl para o diretório do windows, ignoramos pois não queremos a pasta do windows, apenas do linux.
                     if(tem_permissao(uidArquivo,gidArquivo,str(permissoes)) and nome not in ['fdinfo', 'c']):
                         filho = pega_arvore_diretorios(caminhoArquivoAtual)
                         no.filhos.append(filho)
+                        no.tamanho += filho.tamanho #obs: isso aqui tem em em
                 except Exception as e:
                     print(f"Erro ao abrir o diretório {caminhoArquivoAtual}: {e}")
                     continue
@@ -388,9 +395,10 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
                 filho = NoArquivo()
                 filho.adicionaInformacoes(nome, tipoNum, tipoNome, tamanho, stringPermissoes, [])
                 no.filhos.append(filho)
+                no.tamanho += filho.tamanho
 
     except Exception as e:
-        print(f"Erro ao abrir o diretório: {e}")
+        print(f"Erro ao abrir o diretóriooooooooo: {e}")
     finally:
         libc.closedir(pdir)
 
