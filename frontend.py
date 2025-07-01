@@ -268,7 +268,7 @@ class Dashboard(tk.Tk):
             pai,
             "end",
             text=no.nome,
-            values=(no.tipoNome, no.tamanho, no.permissoes)
+            values=(no.tipoNome, (f'{round(no.tamanho/1024, 4)}KB - {round(no.tamanho/1073741824, 4)}GB'), no.permissoes)
         )
         
         for filho in no.filhos:

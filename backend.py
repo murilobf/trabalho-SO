@@ -36,6 +36,21 @@ class Stat(ctypes.Structure): # https://man7.org/linux/man-pages/man3/stat.3type
         ("__pad0", ctypes.c_byte * 256),  # para evitar ler além dos limites, se tirar dá segmentation fault   
     ]
 
+class StatVFS(ctypes.Structure):
+    _fields_ = [
+        ("f_bsize", ctypes.c_ulong),
+        ("f_frsize", ctypes.c_ulong),
+        ("f_blocks", ctypes.c_ulong),
+        ("f_bfree", ctypes.c_ulong),
+        ("f_bavail", ctypes.c_ulong),
+        ("f_files", ctypes.c_ulong),
+        ("f_ffree", ctypes.c_ulong),
+        ("f_favail", ctypes.c_ulong),
+        ("f_fsid", ctypes.c_ulong),
+        ("f_flag", ctypes.c_ulong),
+        ("f_namemax", ctypes.c_ulong),
+    ]
+
 # Os tipos de arquivo definidos por d_type na classe Dirent, é mais prático definir na mão do que extrair do dirent.h do linux
 # Mas caso precise extrair o caminho está em /usr/include/dirent.h
 TIPOS = {
@@ -122,6 +137,84 @@ def coleta_dados_processador():
     with open("/proc/stat") as pastaProc:
         dadosProcessador = pastaProc.read().strip().split()
     return dadosProcessador
+
+# Função para aplicar statvfs usando ctypes
+def uso_particao_c(path):
+    stat = StatVFS()
+    if(libc.statvfs(ctypes.c_char_p(path.encode('utf-8')), ctypes.byref(stat)) == 0): 
+        
+        total = stat.f_frsize * stat.f_blocks
+        livre = stat.f_frsize * stat.f_bfree
+        usado = total - livre
+        return total, usado, livre
+    return None
+
+# Lê /proc/partitions -> lista de partições disponíveis
+def ler_particoes():
+    # Dicionário que associa guarda o nome da partição e seu tamanho
+    particoes = {}
+    with open("/proc/partitions") as f:
+        next(f)  # pula cabeçalho
+        next(f)
+        for linha in f:
+            campos = linha.strip().split()
+            if len(campos) == 4:
+                blocos, nome = int(campos[2]), campos[3]
+                particoes[nome] = blocos * 1024  
+    return particoes
+
+# Lê /proc/mounts e pega os pontos de montagem de cada partição, retornando-os
+def ler_montagens():
+    #Dicionário que associa um nome da partição a um ponto de montagem
+    montagens = {}
+    with open("/proc/mounts") as f:
+        for linha in f:
+            campos = linha.split()
+            dispositivo, ponto = campos[0], campos[1]
+            if dispositivo.startswith("/dev/"):
+                nome_particao = dispositivo.split("/")[-1]
+                montagens[nome_particao] = ponto
+    return montagens
+
+# Junta tudo
+def mostrar_status():
+    particoes = ler_particoes()
+    montagens = ler_montagens()
+
+    print(f"{'Partição':<10} {'Montagem':<20} {'Tamanho':>10} {'Usado':>10} {'Livre':>10} {'Uso %':>6}")
+    print("-" * 70)
+
+    for nome, tamanho in particoes.items():
+
+        if nome in montagens:
+
+            ponto = montagens[nome]
+            resultado = uso_particao_c(ponto)
+            
+            if resultado:
+                total, usado, livre = resultado
+                percentual = (usado / total) * 100 if total else 0
+                print(f"{nome:<10} {ponto:<20} {format_bytes(total):>10} {format_bytes(usado):>10} {format_bytes(livre):>10} {percentual:5.1f}%")
+
+# Formata de bloco para bytes e então para algo legível
+def format_bytes(qtd):
+    #Converte de blocos para bytes
+    qtd /= 4
+
+    for unidade in ['B','KB','MB','GB','TB']:
+
+        #Se a quantidade não puder mais ser dividida
+        if qtd < 1024:
+
+            return f"{qtd:.1f}{unidade}"
+        
+        #Divide para a próxima unidade
+        qtd /= 1024
+
+    return f"{qtd:.1f}PB"
+
+# Executa
+mostrar_status()
 
 # Pega os dados globais do sistema
 def pega_sistema() -> Sistema:
@@ -224,6 +317,8 @@ def coleta_dados_threads(pid: int) -> list[Threads]: #vai receber o processo esp
         dadosThreads.append(Threads(pid, tid, nomeThread, estado)) #faz a lista de dados da thread 
 
     return dadosThreads
+
+
 
 #Pega os processos do sistema e seus dados
 def pega_processos(sistema:Sistema) -> list[Processo]:
@@ -339,7 +434,7 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
         nomeDir = caminho.split('/')[-1] if caminho != '/' else '/'
         no.adicionaInformacoes(nomeDir, tipoNum, tipoNome, tamanho, stringPermissoes, [])
     else:
-        print(f"Erro ao coletar dados do diretóriiiiiiiiiiio {caminho}")
+        print(f"Erro ao coletar dados do diretório {caminho}")
         return no  # retorna o nó vazio mesmo se não conseguir o stat
 
     #Pega informações sobre todos os filhos do diretório
@@ -383,7 +478,7 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
                 try:
                     # O sistema diz que temos permissão para ler fdinfo mas ao tentar acessar vemos que não temos de verdade, temos mas não temos, por isso evitamos.
                     # c é a pasta que o ponto de acesso do wsl para o diretório do windows, ignoramos pois não queremos a pasta do windows, apenas do linux.
-                    if(tem_permissao(uidArquivo,gidArquivo,str(permissoes)) and nome not in ['fdinfo', 'c']):
+                    if(tem_permissao(uidArquivo,gidArquivo,str(permissoes)) and nome not in ['c']):
                         filho = pega_arvore_diretorios(caminhoArquivoAtual)
                         no.filhos.append(filho)
                         no.tamanho += filho.tamanho #obs: isso aqui tem em em
@@ -398,7 +493,7 @@ def pega_arvore_diretorios(caminho: str) -> NoArquivo:
                 no.tamanho += filho.tamanho
 
     except Exception as e:
-        print(f"Erro ao abrir o diretóriooooooooo: {e}")
+        print(f"Erro ao abrir o diretório: {e}")
     finally:
         libc.closedir(pdir)
 
