@@ -22,6 +22,8 @@ class Sistema:
         self.quantidadeProcessos = 0
         #Quantidade de Threads no processador
         self.quantidadeThreads = 0
+        #Lista das partições no sistema
+        self.particoes = []
 
     def adiciona_dados_processador(self, dadosProcessador: list):
         self.dadosProcessador = dadosProcessador
@@ -121,6 +123,16 @@ class Threads:
         self.tid = tid
         self.nomeThread = nomeThread
         self.estadoThread = estado
+
+class Particao:
+    def __init__(self, nome, montagem, tamanho, usado, livre, percentual):
+        self.nome = nome
+        self.montagem = montagem
+        self.tamanho = tamanho
+        self.usado = usado
+        self.livre = livre
+        self.percentual = percentual
+
 
 class NoArquivo:
     def __init__(self):

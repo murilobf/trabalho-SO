@@ -1,5 +1,5 @@
 import time
-from classes import Processo, Sistema, Threads, NoArquivo
+from classes import Processo, Sistema, Threads, NoArquivo, Particao
 import ctypes
 import ctypes.util
 import os
@@ -139,9 +139,9 @@ def coleta_dados_processador():
     return dadosProcessador
 
 # Função para aplicar statvfs usando ctypes
-def uso_particao_c(path):
+def uso_particao(caminho):
     stat = StatVFS()
-    if(libc.statvfs(ctypes.c_char_p(path.encode('utf-8')), ctypes.byref(stat)) == 0): 
+    if(libc.statvfs(ctypes.c_char_p(caminho.encode('utf-8')), ctypes.byref(stat)) == 0): 
         
         total = stat.f_frsize * stat.f_blocks
         livre = stat.f_frsize * stat.f_bfree
@@ -167,13 +167,19 @@ def ler_particoes():
 def ler_montagens():
     #Dicionário que associa um nome da partição a um ponto de montagem
     montagens = {}
+
     with open("/proc/mounts") as f:
+
         for linha in f:
+
             campos = linha.split()
             dispositivo, ponto = campos[0], campos[1]
+
             if dispositivo.startswith("/dev/"):
-                nome_particao = dispositivo.split("/")[-1]
-                montagens[nome_particao] = ponto
+
+                nomeParticao = dispositivo.split("/")[-1]
+                montagens[nomeParticao] = ponto
+                
     return montagens
 
 # Junta tudo
@@ -181,20 +187,24 @@ def mostrar_status():
     particoes = ler_particoes()
     montagens = ler_montagens()
 
-    print(f"{'Partição':<10} {'Montagem':<20} {'Tamanho':>10} {'Usado':>10} {'Livre':>10} {'Uso %':>6}")
-    print("-" * 70)
+    listaParticoes = []
 
+    #tamanho não é usado mas precisa ser chamado porque temos dois tens dentro do dicionario de partições
     for nome, tamanho in particoes.items():
 
         if nome in montagens:
 
             ponto = montagens[nome]
-            resultado = uso_particao_c(ponto)
+            resultado = uso_particao(ponto)
             
             if resultado:
                 total, usado, livre = resultado
                 percentual = (usado / total) * 100 if total else 0
-                print(f"{nome:<10} {ponto:<20} {format_bytes(total):>10} {format_bytes(usado):>10} {format_bytes(livre):>10} {percentual:5.1f}%")
+                particao = Particao(nome, ponto, total, usado, livre, percentual)
+                listaParticoes.append(particao)
+
+    return listaParticoes
+                
 
 # Formata de bloco para bytes e então para algo legível
 def format_bytes(qtd):
@@ -213,8 +223,6 @@ def format_bytes(qtd):
 
     return f"{qtd:.1f}PB"
 
-# Executa
-mostrar_status()
 
 # Pega os dados globais do sistema
 def pega_sistema() -> Sistema:
