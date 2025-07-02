@@ -206,6 +206,9 @@ def pega_particoes():
             if resultado:
                 total, usado, livre = resultado
                 percentual = (usado / total) * 100 if total else 0
+                total = format_bytes(total)
+                usado = format_bytes(usado)
+                livre = format_bytes(livre)
                 particao = Particao(nome, ponto, total, usado, livre, percentual)
                 listaParticoes.append(particao)
 

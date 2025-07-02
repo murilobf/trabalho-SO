@@ -34,6 +34,8 @@ class Dashboard(tk.Tk):
         frameDadosMemSistema.pack(fill=tk.X, pady=5)
         frameDadosOutrosSistema = ttk.Frame(frameSistema)
         frameDadosOutrosSistema.pack(fill=tk.X, pady=5)
+        self.frameParticoesSistema = ttk.Frame(frameSistema)
+        self.frameParticoesSistema.pack(fill=tk.X, pady=5)
 
         self.dadoSistemaCpuUsado = tk.Label(frameDadosCpuSistema, text="")
         self.dadoSistemaCpuUsado.pack(side=tk.LEFT, padx=10)
@@ -73,6 +75,7 @@ class Dashboard(tk.Tk):
         self.dadosMemoria = []
         self.dadosCpu = []
         self.listaObjetosProcessos = []
+        self.labelsParticoes = []
 
         self.figMem, self.axMem = plt.subplots(figsize=(5, 3))
         self.axMem.set_title("Uso de Memória (%)")
@@ -136,6 +139,20 @@ class Dashboard(tk.Tk):
         self.dadoSistemaQtdThreads.config(text=f"Quantidade de threads: {sistema.quantidadeThreads}")
         #Outros dados relevantes
         self.dadoSistemaMemVirtual.config(text=f"Memória usada para o endereçamento virtual: {sistema.memVirtualKB}KB ou {sistema.memVirtualGB}GB")
+
+        #As label para as partições
+        for label in self.labelsParticoes:
+            label.destroy()
+        self.labelsParticoes.clear()
+
+        # Adiciona uma nova linha para cada partição
+        for particao in sistema.particoes:  
+            texto = (f"{particao.nome} montado em {particao.montagem} | "
+                    f"Tamanho: {particao.tamanho} | Usado: {particao.usado} | "
+                    f"Livre: {particao.livre} | Uso: {particao.percentual}%")
+            label = tk.Label(self.frameParticoesSistema, text=texto, anchor="w")
+            label.pack(fill=tk.X, padx=20)
+            self.labelsParticoes.append(label)
 
     #Atualia a lista de processos
     def atualiza_processos(self, sistema: classes.Sistema):
