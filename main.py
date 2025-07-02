@@ -13,7 +13,7 @@ filaCT = Queue(1)
 filaTI = Queue(1)
 #Fila arvore-interface
 filaAI = Queue(1)
-
+particoes = backend.pega_particoes()
 #Funções que serão chamadas nas threads
 
 #Responsável pela coleta de dados
@@ -21,6 +21,7 @@ def loop_de_coleta():
     while True:
 
         auxSistema = backend.pega_sistema()
+        auxSistema.particoes = particoes
         filaCT.put(auxSistema)
         
         time.sleep(1)

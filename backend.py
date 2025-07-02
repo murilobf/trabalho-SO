@@ -87,6 +87,9 @@ libc.closedir.restype = ctypes.c_int
 libc.stat.argtypes = [ctypes.c_char_p, ctypes.POINTER(Stat)]
 libc.stat.restype = ctypes.c_int
 
+libc.statvfs.argtypes = [ctypes.c_char_p, ctypes.POINTER(StatVFS)]
+libc.statvfs.restype = ctypes.c_int
+
 #Função usada para pegar os nomes (ids) de pastas dentro
 def pega_ids(caminho: str):
 
@@ -141,12 +144,14 @@ def coleta_dados_processador():
 # Função para aplicar statvfs usando ctypes
 def uso_particao(caminho):
     stat = StatVFS()
+
     if(libc.statvfs(ctypes.c_char_p(caminho.encode('utf-8')), ctypes.byref(stat)) == 0): 
         
         total = stat.f_frsize * stat.f_blocks
         livre = stat.f_frsize * stat.f_bfree
         usado = total - livre
         return total, usado, livre
+    
     return None
 
 # Lê /proc/partitions -> lista de partições disponíveis
@@ -183,7 +188,7 @@ def ler_montagens():
     return montagens
 
 # Junta tudo
-def mostrar_status():
+def pega_particoes():
     particoes = ler_particoes()
     montagens = ler_montagens()
 
@@ -195,6 +200,7 @@ def mostrar_status():
         if nome in montagens:
 
             ponto = montagens[nome]
+            
             resultado = uso_particao(ponto)
             
             if resultado:
@@ -205,7 +211,6 @@ def mostrar_status():
 
     return listaParticoes
                 
-
 # Formata de bloco para bytes e então para algo legível
 def format_bytes(qtd):
     #Converte de blocos para bytes
