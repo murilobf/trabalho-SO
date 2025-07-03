@@ -306,6 +306,22 @@ def coleta_dados_sockets (pid: int) -> list[str]:
             return []
     return dadosSockets
 
+#Coletar os arquivos abertos pelo processo 
+def coleta_arquivos(pid):
+    dadosArquivos = []
+
+    diretorios = pega_ids(f"/proc/{pid}/fdinfo")  #Abre o diretório de arquivos de link simbólico
+
+    for fd in diretorios:
+        try:
+            caminho = f"/proc/{pid}/fd/{fd}"
+            destino = os.readlink(caminho) # Abre os links simbólicos
+            if destino.startswith("/"): # Filtra todas as linhas referente a sockets
+                dadosArquivos.append(destino)
+        except PermissionError:
+            return []
+    return dadosArquivos
+
 # Pega dados da memória
 def coleta_dados_memoria(pid: int):
     # Memoria. Nota: os dados vem todos numa única linha, é preciso separar. Nota 2: o tamanho é em páginas
@@ -353,6 +369,7 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
             # Coleta e adicona os de IO, socket e arquivos do processo
             processo.adiciona_dados_io(coleta_dados_IO(pid))
             processo.adiciona_sockets(coleta_dados_sockets(pid))
+            processo.adiciona_arquivos(coleta_arquivos(pid))
             
             #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
             usuario = coleta_usuario_processo(pid)

@@ -86,6 +86,7 @@ class Processo:
         self.threads = []
         self.qtdeThreads = 0
         #Dados sobre os sockets do processo
+        self.arquivos = []
         self.sockets = []
         self.io = []
 
@@ -122,6 +123,9 @@ class Processo:
 
     def adiciona_sockets(self, sockets: list[str]):
         self.sockets = sockets
+    
+    def adiciona_arquivos(self, arquivos):
+        self.arquivos = arquivos
         
 class Threads:
     def __init__(self, pid: int, tid: int, nomeThread: str, estado:str):
