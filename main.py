@@ -28,14 +28,14 @@ def loop_de_coleta():
 
 def loop_arvore_diretorio():
     while True:
-        #Aqui será feita uma abordagem diferente dos outros loops, como demora muito pra coletar a árvore, vamos pegar o tempo que falta pra coleta dar 1 ciclo (30s no nosso caso).
+        #Aqui será feita uma abordagem diferente dos outros loops, como demora muito pra coletar a árvore, vamos pegar o tempo que falta pra coleta dar 1 ciclo (60s no nosso caso).
         t1 = time.time()
         auxRaiz = backend.pega_arvore_diretorios("/")
         filaAI.put(auxRaiz)
         t2 = time.time()
-        tempoFaltante = 30 - (t2 - t1)
+        tempoFaltante = 60 - (t2 - t1)
 
-        #Se esse tempo for maior que 0, espera o tempo necessário para dar 30s, caso contrário, estamos atrasados, chama a função de novo imediatamente
+        #Se esse tempo for maior que 0, espera o tempo necessário para dar 60s, caso contrário, estamos atrasados, chama a função de novo imediatamente
         if(tempoFaltante > 0):
             time.sleep(tempoFaltante)
 

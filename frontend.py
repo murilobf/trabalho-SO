@@ -302,8 +302,8 @@ class Dashboard(tk.Tk):
 
         #Reabre os nós expandidos anteriormente (se houver algum)
         self.reexpande_caminho(expandidos)
-        #Quanto tempo falta para o ciclo de 30s
-        tempoFaltante = int(30 - (t2 - t1))
+        #Quanto tempo falta para o ciclo de 60s
+        tempoFaltante = int(60 - (t2 - t1))
 
         if(tempoFaltante > 0):
             #O tempo usado pelo after é em ms então fazemos a conversão
