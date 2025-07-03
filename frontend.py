@@ -251,7 +251,7 @@ class Dashboard(tk.Tk):
         for thread in processo.threads:
             tk.Label(scrollable_frame, text=f"TID: {thread.tid} | Nome: {thread.nomeThread} | Estado: {thread.estadoThread} |").pack(anchor='w', padx=10)
         
-        # Separador visual
+        # Área para mostrar sockets, arquivos e io
         ttk.Separator(janelaDetalhes, orient='horizontal').pack(fill='x', pady=5)
         tk.Label(janelaDetalhes, text="Arquivos, Sockets e IO:", font=('Helvetica', 10, 'bold')).pack()
 
@@ -286,6 +286,20 @@ class Dashboard(tk.Tk):
         for i, io in enumerate(processo.io):
             if i < len(io_labels):
                 tk.Label(frameIO, text=f"{io_labels[i]} {io}").pack(anchor='w')
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
 
     # Função para guardar os nós abertos da árvore para quando ela for refeita abrí-los de novo, de forma que o usuário não perceba que a árvore foi substituída
     def guarda_caminho_aberto(self):
