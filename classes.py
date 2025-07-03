@@ -85,6 +85,9 @@ class Processo:
         #Dados sobre as threads do processo
         self.threads = []
         self.qtdeThreads = 0
+        #Dados sobre os sockets do processo
+        self.sockets = []
+        self.io = []
 
     def calcula_pagina_kb(self, dadoPag):
         auxMemTotalKb = (int(dadoPag)*tamPaginakB) # Multiplicação para tornar o dado de quantidade de páginas usadas no total para tamanho em KB
@@ -114,8 +117,11 @@ class Processo:
     def retorna_string_dados(self):
         return f"ID: {self.pid} | Processo: {self.nome} | Usuário: {self.usuario} | Estado: {self.estado}"
 
-    def retorna_uid(self):
-        return self.usuario
+    def adiciona_dados_io(self, dados_io: list[str]):
+        self.io = dados_io
+
+    def adiciona_sockets(self, sockets: list[str]):
+        self.sockets = sockets
 
 class Threads:
     def __init__(self, pid: int, tid: int, nomeThread: str, estado:str):

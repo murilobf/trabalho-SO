@@ -259,7 +259,6 @@ def coleta_infos_processo(pid) -> list:
     with open(f"/proc/{pid}/stat") as pasta:
         processos = pasta.read().split(" ") #separa os dados da string do processo para uma lista
         dadosProcessos = [processos[i] for i in valores_necessarios] #Pega os dados do processo de posições especificamente selecionadas
-        #coleta_dados_sockets(pid)
     return dadosProcessos
 
 # Pega o id do usuário que chamou o processo
@@ -272,39 +271,41 @@ def coleta_usuario_processo(pid: int) -> int:
     else:
         print("Erro ao coletar o usuário do processo")
 
+#========================================================= (pra facilitar a achar, pode apagar essa linha, Murilo)
 # Coleta dos dos dados de entrada e saída dos arquivos e processos
-def coleta_dados_IO(pid: int):
+def coleta_dados_IO(pid: int) -> list[str]:
     dadosIO = []
     try:
         with open(f"/proc/{pid}/io") as t:
             linhas = t.readlines()
             for linha in linhas:
-                if linha.startswith("rchar:"):
+                if linha.startswith("rchar:"):  # Total de bytes lidos pela chamada 
                     dadosIO.append(linha.split()[1])
-                elif linha.startswith("wchar:"):
+                elif linha.startswith("wchar:"): # Total de bytes escritos pela chamada
                     dadosIO.append(linha.split()[1])
-                elif linha.startswith("syscr:"):
+                elif linha.startswith("syscr:"): # Número de chamadas de sistema read() realizadas
                     dadosIO.append(linha.split()[1])
-                elif linha.startswith("syscw:"):
+                elif linha.startswith("syscw:"): # Número de chamadas de sistema write() realizadas
                     dadosIO.append(linha.split()[1])
     except PermissionError:
-        pass
+        return []
+    return dadosIO
 
 #Coleta os sockets do sistema
-def coleta_dados_sockets (pid: int):
+def coleta_dados_sockets (pid: int) -> list[str]:
     dadosSockets = []
 
-    diretorios = pega_ids(f"/proc/{pid}/fdinfo")
+    diretorios = pega_ids(f"/proc/{pid}/fdinfo")  #Abre o diretório de arquivos de link simbólico
+
     for fd in diretorios:
         try:
             caminho = f"/proc/{pid}/fd/{fd}"
-            destino = os.readlink(caminho)
-            if destino.startswith("socket:["):
+            destino = os.readlink(caminho) # Abre os links simbólicos
+            if destino.startswith("socket:["): # Filtra todas as linhas referente a sockets
                 dadosSockets.append(destino)
         except PermissionError:
-            continue
-        except FileNotFoundError:
-            continue
+            return []
+    return dadosSockets
 
 # Pega dados da memória
 def coleta_dados_memoria(pid: int):
@@ -334,8 +335,6 @@ def coleta_dados_threads(pid: int) -> list[Threads]: #vai receber o processo esp
 
     return dadosThreads
 
-
-
 #Pega os processos do sistema e seus dados
 def pega_processos(sistema:Sistema) -> list[Processo]:
     processosRetorno = []
@@ -351,6 +350,10 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
         try:
             #Coleta todos os dados do processo
             dadosProcesso = coleta_infos_processo(pid)
+
+            # Coleta e adicona os de IO, socket e arquivos do processo
+            processo.adiciona_dados_io(coleta_dados_IO(pid))
+            processo.adiciona_sockets(coleta_dados_sockets(pid))
             
             #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
             usuario = coleta_usuario_processo(pid)
