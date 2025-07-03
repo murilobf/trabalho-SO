@@ -251,55 +251,50 @@ class Dashboard(tk.Tk):
         for thread in processo.threads:
             tk.Label(scrollable_frame, text=f"TID: {thread.tid} | Nome: {thread.nomeThread} | Estado: {thread.estadoThread} |").pack(anchor='w', padx=10)
         
-        # Área para mostrar sockets, arquivos e io
+        # Área para mostrar sockets, arquivos e io        # Separador da parte de Sockets, Arquivos e IO
         ttk.Separator(janelaDetalhes, orient='horizontal').pack(fill='x', pady=5)
         tk.Label(janelaDetalhes, text="Arquivos, Sockets e IO:", font=('Helvetica', 10, 'bold')).pack()
 
-        # Frame principal com grid de 3 colunas
-        frameInfo = tk.Frame(janelaDetalhes)
-        frameInfo.pack(fill=tk.BOTH, expand=True)
+        # Frame com scrollbar para essa seção
+        frameIO = tk.Frame(janelaDetalhes)
+        frameIO.pack(fill=tk.BOTH, expand=True)
 
-        # Labels de título
-        tk.Label(frameInfo, text="Arquivos Abertos", font=('Helvetica', 9, 'bold')).grid(row=0, column=0, sticky='w', padx=10, pady=(5, 0))
-        tk.Label(frameInfo, text="Sockets", font=('Helvetica', 9, 'bold')).grid(row=0, column=1, sticky='w', padx=10, pady=(5, 0))
-        tk.Label(frameInfo, text="Dados de IO", font=('Helvetica', 9, 'bold')).grid(row=0, column=2, sticky='w', padx=10, pady=(5, 0))
+        canvas_io = tk.Canvas(frameIO)
+        scrollbar_io = tk.Scrollbar(frameIO, orient="vertical", command=canvas_io.yview)
+        scrollable_io = tk.Frame(canvas_io)
 
-        # Subframes para cada coluna
-        frameArquivos = tk.Frame(frameInfo)
-        frameSockets = tk.Frame(frameInfo)
-        frameIO = tk.Frame(frameInfo)
-
-        frameArquivos.grid(row=1, column=0, sticky='nw', padx=10, pady=5)
-        frameSockets.grid(row=1, column=1, sticky='nw', padx=10, pady=5)
-        frameIO.grid(row=1, column=2, sticky='nw', padx=10, pady=5)
-
-        # Preenche arquivos abertos
-        for arq in processo.arquivos:
-            tk.Label(frameArquivos, text=arq).pack(anchor='w')
-
-        # Preenche sockets
-        for sock in processo.sockets:
-            tk.Label(frameSockets, text=sock).pack(anchor='w')
-
-        # Preenche dados de IO
-        io_labels = ['rchar (lidos):', 'wchar (escritos):', 'syscr (chamadas read):', 'syscw (chamadas write):']
-        for i, io in enumerate(processo.io):
-            if i < len(io_labels):
-                tk.Label(frameIO, text=f"{io_labels[i]} {io}").pack(anchor='w')
-
-        scrollable_frame.bind(
+        scrollable_io.bind(
             "<Configure>",
-            lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
+            lambda e: canvas_io.configure(
+                scrollregion=canvas_io.bbox("all")
             )
         )
 
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas_io.create_window((0, 0), window=scrollable_io, anchor="nw")
+        canvas_io.configure(yscrollcommand=scrollbar_io.set)
 
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        canvas_io.pack(side="left", fill="both", expand=True)
+        scrollbar_io.pack(side="right", fill="y")
 
+        # Exibe os arquivos abertos
+        tk.Label(scrollable_io, text="Arquivos Abertos:", font=('Helvetica', 9, 'bold')).pack(anchor='w', padx=10)
+        for arq in processo.arquivos:
+            tk.Label(scrollable_io, text=f"{arq}").pack(anchor='w', padx=20)
+
+        # Exibe os sockets
+        tk.Label(scrollable_io, text="Sockets:", font=('Helvetica', 9, 'bold')).pack(anchor='w', padx=10, pady=(10, 0))
+        for sock in processo.sockets:
+            tk.Label(scrollable_io, text=f"{sock}").pack(anchor='w', padx=20)
+
+        # Exibe os dados de IO
+        tk.Label(scrollable_io, text="Dados de Entrada/Saída (IO):", font=('Helvetica', 9, 'bold')).pack(anchor='w', padx=10, pady=(10, 0))
+        io_labels = ['rchar (lidos):', 'wchar (escritos):', 'syscr (chamadas read):', 'syscw (chamadas write):']
+        for i, io in enumerate(processo.io):
+            if i < len(io_labels):
+                tk.Label(scrollable_io, text=f"{io_labels[i]} {io}").pack(anchor='w', padx=20)
+
+
+       
 
     # Função para guardar os nós abertos da árvore para quando ela for refeita abrí-los de novo, de forma que o usuário não perceba que a árvore foi substituída
     def guarda_caminho_aberto(self):
