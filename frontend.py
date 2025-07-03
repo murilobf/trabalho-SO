@@ -5,6 +5,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 from queue import Queue
 import time
+from backend import format_bytes
 
 class Dashboard(tk.Tk):
     def __init__(self, filaTI: Queue, filaAI: Queue):
@@ -285,7 +286,7 @@ class Dashboard(tk.Tk):
             pai,
             "end",
             text=no.nome,
-            values=(no.tipoNome, (f'{round(no.tamanho/1024, 4)}KB - {round(no.tamanho/1073741824, 4)}GB'), no.permissoes)
+            values=(no.tipoNome, (f'{format_bytes(no.tamanho*4)}'), no.permissoes) #o *4 do no.tamanho é porque o format_bytes foi feito pra coletar blocos originalmente
         )
         
         for filho in no.filhos:

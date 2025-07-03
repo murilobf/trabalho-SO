@@ -351,8 +351,8 @@ def pega_processos(sistema:Sistema) -> list[Processo]:
             dadosProcesso = coleta_infos_processo(pid)
 
             # Coleta e adicona os de IO, socket e arquivos do processo
-            #processo.adiciona_dados_io(coleta_dados_IO(pid))
-            #processo.adiciona_sockets(coleta_dados_sockets(pid))
+            processo.adiciona_dados_io(coleta_dados_IO(pid))
+            processo.adiciona_sockets(coleta_dados_sockets(pid))
             
             #https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux diz como pegar nome do usuario pelo uid
             usuario = coleta_usuario_processo(pid)

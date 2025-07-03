@@ -122,7 +122,7 @@ class Processo:
 
     def adiciona_sockets(self, sockets: list[str]):
         self.sockets = sockets
-
+        
 class Threads:
     def __init__(self, pid: int, tid: int, nomeThread: str, estado:str):
         self.pid = pid
