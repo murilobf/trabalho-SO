@@ -150,7 +150,7 @@ class Dashboard(tk.Tk):
         for particao in sistema.particoes:  
             texto = (f"{particao.nome} montado em {particao.montagem} | "
                     f"Tamanho: {particao.tamanho} | Usado: {particao.usado} | "
-                    f"Livre: {particao.livre} | Uso: {particao.percentual}%")
+                    f"Livre: {particao.livre} | Uso: {round(particao.percentual,2)}%")
             label = tk.Label(self.frameParticoesSistema, text=texto, anchor="w")
             label.pack(fill=tk.X, padx=20)
             self.labelsParticoes.append(label)
